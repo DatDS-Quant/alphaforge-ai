@@ -1,4 +1,5 @@
 @import './tokens.css';
+@import './terminal.css';
 
 * {
   box-sizing: border-box;
@@ -7,11 +8,11 @@
 }
 
 body {
-  background-color: var(--bg-main);
+  background-color: var(--bg-base);
   color: var(--text-primary);
   font-family: var(--font-family);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 11px;
+  line-height: 1.4;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
   height: 100vh;

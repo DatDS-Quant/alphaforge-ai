@@ -1,6 +1,6 @@
-# AlphaForge AI
+# AlphaForge Research Terminal
 
-AI-powered quantitative research and alpha expression engine.
+Signal Research, Backtesting, and Risk Review.
 
 ## What This Project Is
 
@@ -124,12 +124,14 @@ Saved experiments are written locally to:
 - reports/experiments/{experiment_id}_metadata.json
 
 Research Workstation Workflow:
-Research Desk -> Formula Lab -> Backtest Lab -> Risk Review -> Research Memo -> Experiment Artifacts
-1. Research Desk: Submit a natural-language concept and generate a structured research hypothesis.
-2. Formula Lab: Validate mathematical operators and sandbox security checks using AST validation.
-3. Backtest Lab: Run a vectorized historical simulation, comparing strategy equity curves against a buy-and-hold benchmark.
-4. Risk Review: Check quantitative limits checklist for APPROVE, REDUCE, or REJECT sizing recommendation decisions.
-5. Research Memo: Compile the full research memo and save local experiment metadata and report files.
+Home -> Research Desk -> Formula Lab -> Backtest -> Risk -> Memo -> Artifacts
+1. Home: Overview of active research pipeline, data configurations, and limitations.
+2. Research Desk: Submit a natural-language concept and generate a structured research hypothesis.
+3. Formula Lab: Validate mathematical operators and sandbox security checks using AST validation.
+4. Backtest: Run a vectorized historical simulation, comparing strategy equity curves against a buy-and-hold benchmark.
+5. Risk: Check quantitative limits checklist for APPROVE, REDUCE, or REJECT sizing recommendation decisions.
+6. Memo: Compile the full research memo and save local experiment metadata and report files.
+7. Artifacts: Inspect local experiment serialization registry.
 
 ## Benchmark Comparison
 

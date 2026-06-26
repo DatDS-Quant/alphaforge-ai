@@ -1,6 +1,6 @@
-# AlphaForge AI System Architecture
+# AlphaForge Research Terminal System Architecture
 
-This document provides a technical overview of the AlphaForge AI repository, detailing component layout, operational data flows, module responsibilities, limitations, and future steps.
+This document provides a technical overview of the AlphaForge Research Terminal repository, detailing component layout, operational data flows, module responsibilities, limitations, and future steps.
 
 ## Component Layout
 

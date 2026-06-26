@@ -1,31 +1,30 @@
-import React, { useState } from 'react';
-import { useResearchStore } from '../state/useResearchStore';
+import React from 'react';
+import { useResearchStore } from '../state/researchStore';
 import { apiClient } from '../api/client';
-import { StatusPill } from '../components/StatusPill';
+import { Panel } from '../components/Panel';
+import { RiskBadge } from '../components/RiskBadge';
 
 export const ResearchDesk: React.FC = () => {
   const {
+    userPrompt, setUserPrompt,
+    preferredStyle, setPreferredStyle,
     alphaIdea, setAlphaIdea,
     setAlphaFormula, setValidation,
     loading, setLoading,
     setError,
   } = useResearchStore();
 
-  const [prompt, setPrompt] = useState('Find a momentum alpha confirmed by abnormal volume');
-  const [style, setStyle] = useState('balanced');
-
   const handleGenerate = async () => {
-    if (!prompt.trim()) return;
+    if (!userPrompt.trim()) return;
     setLoading(true);
     setError(null);
     try {
       const res = await apiClient.generateAlpha({
-        user_prompt: prompt,
-        preferred_style: style,
+        user_prompt: userPrompt,
+        preferred_style: preferredStyle,
       });
       setAlphaIdea(res);
-      setAlphaFormula(res.formula); // auto update sidebar formula
-      // Reset subsequent metrics validation to align steps
+      setAlphaFormula(res.formula);
       setValidation(null);
     } catch (err: any) {
       setError(err.message || 'Failed to generate alpha idea');
@@ -35,141 +34,175 @@ export const ResearchDesk: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <div className="card">
-        <h3 className="card-title">AI Research Desk</h3>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '12px' }}>
-          Translate natural-language research concepts into structured mathematical alpha expressions.
-        </p>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div className="form-group">
-            <label>Research Prompt / Strategy Hypothesis Idea</label>
+    <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr 300px', gap: '1rem', height: '100%' }}>
+      {/* Left panel: Input config */}
+      <Panel title="Research Parameters">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}>
+          <div className="rail-form-group">
+            <label>Hypothesis Input Concept</label>
             <textarea
-              rows={3}
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="e.g., Find a momentum alpha confirmed by abnormal volume"
+              className="rail-textarea"
+              rows={4}
+              style={{ fontFamily: 'inherit', fontSize: '12px' }}
+              value={userPrompt}
+              onChange={(e) => setUserPrompt(e.target.value)}
+              placeholder="e.g. Find a momentum alpha confirmed by abnormal volume"
               disabled={loading}
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: '1rem', alignItems: 'end' }}>
-            <div className="form-group">
-              <label>Research Framing Style</label>
-              <select value={style} onChange={(e) => setStyle(e.target.value)} disabled={loading}>
-                <option value="balanced">balanced</option>
-                <option value="conservative">conservative</option>
-                <option value="aggressive">aggressive</option>
-              </select>
-            </div>
-            <button onClick={handleGenerate} disabled={loading || !prompt.trim()} style={{ height: '36px' }}>
-              {loading ? 'Generating...' : 'Generate Research Idea'}
-            </button>
+          <div className="rail-form-group">
+            <label>Framing Strategy Style</label>
+            <select
+              className="rail-select"
+              value={preferredStyle}
+              onChange={(e) => setPreferredStyle(e.target.value)}
+              disabled={loading}
+            >
+              <option value="balanced">balanced</option>
+              <option value="conservative">conservative</option>
+              <option value="aggressive">aggressive</option>
+            </select>
           </div>
+
+          <button
+            onClick={handleGenerate}
+            disabled={loading || !userPrompt.trim()}
+            style={{ width: '100%', height: '28px', fontSize: '11px', marginTop: 'auto' }}
+          >
+            {loading ? 'Compiling Concept...' : 'Generate Research Idea'}
+          </button>
         </div>
-      </div>
+      </Panel>
 
-      {alphaIdea && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-          <div className="card">
-            <h3 className="card-title">Generated Research Hypothesis</h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '12px' }}>
-              <div>
-                <strong>Title:</strong>
-                <p style={{ marginTop: '0.25rem' }}>{alphaIdea.title}</p>
-              </div>
+      {/* Center panel: Generated Proposal */}
+      <Panel title="Quantitative Proposal Specification">
+        {alphaIdea ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '11px', overflowY: 'auto' }}>
+            <div>
+              <strong>Target Title:</strong>
+              <div style={{ fontSize: '13px', fontWeight: 'bold', marginTop: '0.15rem' }}>{alphaIdea.title}</div>
+            </div>
 
-              <div>
-                <strong>Hypothesis:</strong>
-                <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{alphaIdea.hypothesis}</p>
-              </div>
+            <div>
+              <strong>Working Hypothesis:</strong>
+              <p style={{ color: 'var(--text-secondary)', marginTop: '0.15rem', lineHeight: '1.4' }}>
+                {alphaIdea.hypothesis}
+              </p>
+            </div>
 
-              <div>
-                <strong>Mathematical Formula Expression:</strong>
-                <pre style={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                  border: '1px solid var(--border-color)',
-                  padding: '0.5rem',
-                  borderRadius: 'var(--border-radius)',
-                  marginTop: '0.25rem',
-                  fontFamily: 'var(--font-mono)',
-                  color: 'var(--color-primary)',
-                }}>
-                  {alphaIdea.formula}
-                </pre>
-              </div>
+            <div>
+              <strong>Mathematical Alpha Expression:</strong>
+              <pre style={{
+                backgroundColor: 'var(--bg-elevated)',
+                border: '1px solid var(--border)',
+                padding: '0.5rem',
+                borderRadius: 'var(--border-radius)',
+                fontFamily: 'var(--font-mono)',
+                color: 'var(--accent-teal)',
+                fontSize: '11px',
+                marginTop: '0.25rem',
+                overflowX: 'auto',
+              }}>
+                {alphaIdea.formula}
+              </pre>
+            </div>
 
-              <div>
-                <strong>Expected Behavior:</strong>
-                <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{alphaIdea.expected_behavior}</p>
-              </div>
+            <div>
+              <strong>Expected Pricing Behavior:</strong>
+              <p style={{ color: 'var(--text-secondary)', marginTop: '0.15rem', lineHeight: '1.4' }}>
+                {alphaIdea.expected_behavior}
+              </p>
+            </div>
 
-              <div>
-                <strong>Risk Notes:</strong>
-                <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{alphaIdea.risk_notes}</p>
-              </div>
+            <div>
+              <strong>Risk and Limitations Notes:</strong>
+              <p style={{ color: 'var(--text-secondary)', marginTop: '0.15rem', lineHeight: '1.4' }}>
+                {alphaIdea.risk_notes}
+              </p>
+            </div>
 
-              <div>
-                <strong>Scientific Explanation:</strong>
-                <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{alphaIdea.explanation}</p>
-              </div>
+            <div>
+              <strong>Research Justification / Explanation:</strong>
+              <p style={{ color: 'var(--text-secondary)', marginTop: '0.15rem', lineHeight: '1.4' }}>
+                {alphaIdea.explanation}
+              </p>
             </div>
           </div>
+        ) : (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            color: 'var(--text-muted)',
+            fontSize: '11px',
+          }}>
+            Enter a prompt on the left and click Generate to propose an alpha strategy.
+          </div>
+        )}
+      </Panel>
 
-          <div className="card">
-            <h3 className="card-title">Agent Execution Trace Log</h3>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '12px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                <div>
-                  <strong>Detected Theme:</strong>
-                  <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                    {alphaIdea.trace.detected_theme}
-                  </div>
-                </div>
-                <div>
-                  <strong>Selected Template:</strong>
-                  <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                    {alphaIdea.trace.formula_template_selected}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <strong>Validation Status:</strong>
-                <div style={{ marginTop: '0.25rem' }}>
-                  <StatusPill status={alphaIdea.trace.validation_status} />
-                </div>
-              </div>
-
-              {alphaIdea.trace.warnings && alphaIdea.trace.warnings.length > 0 && (
-                <div>
-                  <strong>Warnings Checklist:</strong>
-                  <ul style={{ margin: '0.5rem 0 0 1.25rem', color: 'var(--text-secondary)' }}>
-                    {alphaIdea.trace.warnings.map((w, idx) => (
-                      <li key={idx}>{w}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <div>
-                <strong>Raw Compiler Outputs:</strong>
-                <div className="trace-log" style={{ marginTop: '0.5rem' }}>
-{`[trace] User prompt keyword analysis matched theme "${alphaIdea.trace.detected_theme}"
-[trace] Selecting formula template: ${alphaIdea.trace.formula_template_selected}
-[trace] Formula output compiles successfully: ${alphaIdea.formula}
-[trace] Run internal Abstract Syntax Tree (AST) validation checker...
-[trace] AST Result: ${alphaIdea.trace.validation_status} (0 nodes flagged)
-[trace] Ready for pipeline backtesting`}
-                </div>
+      {/* Right panel: Agent Trace logs */}
+      <Panel title="Model Decision Trace">
+        {alphaIdea ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '11px', height: '100%' }}>
+            <div>
+              <strong>Classified Theme:</strong>
+              <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-gold)', marginTop: '0.15rem' }}>
+                {alphaIdea.trace.detected_theme}
               </div>
             </div>
+
+            <div>
+              <strong>Selected Equation Template:</strong>
+              <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-teal)', marginTop: '0.15rem' }}>
+                {alphaIdea.trace.formula_template_selected}
+              </div>
+            </div>
+
+            <div>
+              <strong>Trace Validation Code:</strong>
+              <div style={{ marginTop: '0.25rem' }}>
+                <RiskBadge decision={alphaIdea.trace.validation_status} />
+              </div>
+            </div>
+
+            {alphaIdea.trace.warnings && alphaIdea.trace.warnings.length > 0 && (
+              <div>
+                <strong>Trace Warnings:</strong>
+                <ul style={{ margin: '0.25rem 0 0 1rem', paddingLeft: 0, color: 'var(--text-secondary)' }}>
+                  {alphaIdea.trace.warnings.map((w, idx) => (
+                    <li key={idx} style={{ marginBottom: '0.2rem' }}>{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', marginTop: '0.5rem' }}>
+              <strong>Execution Trace Log Output:</strong>
+              <pre className="trace-log" style={{ flex: 1, marginTop: '0.25rem', overflowY: 'auto' }}>
+{`[trace] Analyzed prompt keywords
+[trace] Matched theme: ${alphaIdea.trace.detected_theme}
+[trace] Loaded equation template: ${alphaIdea.trace.formula_template_selected}
+[trace] Sandbox validates formula AST checks: ${alphaIdea.trace.validation_status}
+[trace] Trace outputs completed`}
+              </pre>
+            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            color: 'var(--text-muted)',
+            fontSize: '11px',
+          }}>
+            Decision trace logs will render upon proposal compilation.
+          </div>
+        )}
+      </Panel>
     </div>
   );
 };

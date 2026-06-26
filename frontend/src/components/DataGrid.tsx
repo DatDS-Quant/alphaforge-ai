@@ -6,15 +6,15 @@ interface Column {
   render?: (row: any) => React.ReactNode;
 }
 
-interface DataTableProps {
+interface DataGridProps {
   columns: Column[];
   data: any[];
 }
 
-export const DataTable: React.FC<DataTableProps> = ({ columns, data }) => {
+export const DataGrid: React.FC<DataGridProps> = ({ columns, data }) => {
   return (
-    <div className="table-container">
-      <table className="data-table">
+    <div className="terminal-table-container">
+      <table className="terminal-table">
         <thead>
           <tr>
             {columns.map((col, idx) => (

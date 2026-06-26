@@ -20,6 +20,10 @@ export interface ResearchStore {
   lowerQuantile: number;
   transactionCost: number;
   slippage: number;
+  
+  // Prompt settings
+  userPrompt: string;
+  preferredStyle: string;
 
   // Active Navigation
   activeTab: string;
@@ -51,6 +55,9 @@ export interface ResearchStore {
   setLowerQuantile: (v: number) => void;
   setTransactionCost: (v: number) => void;
   setSlippage: (v: number) => void;
+  
+  setUserPrompt: (v: string) => void;
+  setPreferredStyle: (v: string) => void;
 
   setActiveTab: (v: string) => void;
   
@@ -89,8 +96,11 @@ export const ResearchProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [lowerQuantile, setLowerQuantile] = useState(0.3);
   const [transactionCost, setTransactionCost] = useState(0.0005);
   const [slippage, setSlippage] = useState(0.0005);
+  
+  const [userPrompt, setUserPrompt] = useState('Find a momentum alpha confirmed by abnormal volume');
+  const [preferredStyle, setPreferredStyle] = useState('balanced');
 
-  const [activeTab, setActiveTab] = useState('Research Desk');
+  const [activeTab, setActiveTab] = useState('Home');
 
   const [alphaIdea, setAlphaIdea] = useState<AlphaGenerateResponse | null>(null);
   const [validation, setValidation] = useState<AlphaEvaluateResponse | null>(null);
@@ -127,9 +137,10 @@ export const ResearchProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const reportStatus = report ? 'Generated' : 'Pending';
   const artifactsStatus = savedArtifact ? 'Saved' : 'Not Saved';
 
-  return (
-    <ResearchContext.Provider
-      value={{
+  return React.createElement(
+    ResearchContext.Provider,
+    {
+      value: {
         days,
         seed,
         scenario,
@@ -140,6 +151,8 @@ export const ResearchProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         lowerQuantile,
         transactionCost,
         slippage,
+        userPrompt,
+        preferredStyle,
         activeTab,
         alphaIdea,
         validation,
@@ -161,6 +174,8 @@ export const ResearchProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setLowerQuantile,
         setTransactionCost,
         setSlippage,
+        setUserPrompt,
+        setPreferredStyle,
         setActiveTab,
         setAlphaIdea,
         setValidation,
@@ -179,10 +194,9 @@ export const ResearchProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         riskStatus,
         reportStatus,
         artifactsStatus,
-      }}
-    >
-      {children}
-    </ResearchContext.Provider>
+      },
+    },
+    children
   );
 };
 
