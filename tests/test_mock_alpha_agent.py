@@ -1,8 +1,4 @@
 import re
-import sys
-from unittest.mock import MagicMock
-
-import pytest
 
 from app.agents.mock_alpha_agent import MockAlphaAgent
 from app.core.expression_engine.validator import validate_expression
@@ -123,53 +119,6 @@ def test_output_structure_and_plain_text():
         flags=re.UNICODE,
     )
     assert not emoji_pattern.search(all_text), "Found emoji/icon character in agent response"
-
-
-def test_dashboard_importable():
-    """
-    Verify that the Streamlit dashboard can be imported cleanly without immediate crashes.
-    Streamlit is mocked during import to avoid runtime initialization errors.
-    """
-    # Temporarily mock Streamlit in sys.modules to allow importing the dashboard script in testing
-    streamlit_mock = MagicMock()
-    # Configure mock methods to return strings/numbers so top-level code runs without syntax/TypeError crashes
-    streamlit_mock.sidebar.text_input.return_value = "rank(momentum(close, 20))"
-    streamlit_mock.sidebar.number_input.return_value = 42
-    streamlit_mock.sidebar.selectbox.return_value = "long_short"
-    streamlit_mock.sidebar.slider.return_value = 0.5
-    streamlit_mock.text_area.return_value = "rank(momentum(close, 20))"
-    streamlit_mock.sidebar.text_area.return_value = "rank(momentum(close, 20))"
-    streamlit_mock.tabs.return_value = (
-        MagicMock(),
-        MagicMock(),
-        MagicMock(),
-        MagicMock(),
-        MagicMock(),
-    )
-    streamlit_mock.sidebar.button.return_value = False
-    streamlit_mock.button.return_value = False
-    streamlit_mock.columns.return_value = (
-        MagicMock(),
-        MagicMock(),
-        MagicMock(),
-        MagicMock(),
-        MagicMock(),
-        MagicMock(),
-    )
-    streamlit_mock.session_state = {}
-    sys.modules["streamlit"] = streamlit_mock
-
-    # Import the dashboard app script
-    try:
-        import dashboard.streamlit_app
-
-        assert dashboard.streamlit_app is not None
-    except Exception as e:
-        pytest.fail(f"Dashboard import failed: {str(e)}")
-    finally:
-        # Clean up sys.modules
-        if "streamlit" in sys.modules:
-            del sys.modules["streamlit"]
 
 
 def test_agent_service_successful_flow():

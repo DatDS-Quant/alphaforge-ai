@@ -31,8 +31,8 @@ The repository utilizes a modular package layout:
    - report_agent.py: Builds deterministic markdown quantitative report memos.
    - artifact_store.py: Creates filesystem-safe experiment IDs and writes metadata JSON and report Markdown to disk.
    - report_service.py: Service coordinator linking the report agent and artifact store.
-8. dashboard/
-   - streamlit_app.py: Provides the user dashboard interface.
+8. frontend/
+   - React-based custom research terminal workspace.
 
 ## Operational Data Flow
 
@@ -80,7 +80,7 @@ To provide a quantitative credibility layer, the backtester computes strategy pe
    - `strategy_excess_return_vs_buy_hold`: Total strategy return minus buy-and-hold return.
    - `strategy_correlation_to_asset_return`: Pearson correlation coefficient of daily strategy returns against asset returns (safely handling zero-variance scenarios by returning 0.0).
    - `exposure_ratio`: Fraction of days where the strategy holds an active position (absolute signal > 0).
-4. Presentation: These metrics and equity curves are rendered together in the Streamlit Backtest Lab, included in the generated Research Report, and stored inside the experiment artifacts.
+4. Presentation: These metrics and equity curves are rendered together in the React Backtest Lab, included in the generated Research Report, and stored inside the experiment artifacts.
 
 ## Synthetic Scenario Generation Modes
 

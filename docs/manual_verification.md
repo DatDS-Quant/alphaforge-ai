@@ -39,45 +39,44 @@ http://127.0.0.1:8000/docs
 
 This opens the interactive Swagger UI interface to inspect and trigger GET /health, POST /data/generate, POST /alpha/evaluate, POST /backtest/run, POST /risk/evaluate, POST /report/generate, and POST /experiments/save endpoints.
 
-### Run Streamlit Dashboard
-Launch the frontend dashboard interface using:
-streamlit run dashboard/streamlit_app.py
+### Run React Research Terminal
+To install and launch the React workspace:
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-This opens a browser tab (typically at http://localhost:8501) with five plain-text tabs: AI Alpha Research Desk, Alpha Formula, Backtest Lab, Risk Review, and Research Report.
+This opens a browser tab at http://localhost:5173 with six professional workspace tabs: Research Desk, Formula Lab, Backtest Lab, Risk Review, Research Memo, and Experiment Artifacts.
 
 ## Sample Quantitative Workflow Example
 
-1. Start the backend API server and Streamlit dashboard.
-2. In the Streamlit sidebar, configure the target parameters:
+1. Start the backend API server and launch the React research terminal.
+2. In the sidebar Settings panel, configure the target parameters:
    - Days to Generate: 1000
-   - Random Seed: 42
-   - Alpha Formula: rank(momentum(close, 20))
+   - Seed: 42
+   - Synthetic Scenario: random_walk
+   - Data File Path: data/sample_ohlcv.csv
+   - Alpha Formula Expression: rank(momentum(close, 20))
    - Signal Mode: long_short
-   - Upper Quantile Threshold: 0.7
-   - Lower Quantile Threshold: 0.3
+   - Upper Quantile: 0.7
+   - Lower Quantile: 0.3
    - Transaction Cost Rate: 0.0005
    - Slippage Rate: 0.0005
-3. Click "Generate Sample Data". The dashboard generates and saves data/sample_ohlcv.csv.
-4. Navigate to the "AI Alpha Research Desk" tab.
-5. In the "Your Alpha Concept" text area, test with one of the following sample prompts:
+3. Click "Generate Data". The system generates and saves the file to the local disk.
+4. Navigate to the "Research Desk" tab.
+5. In the "Research Prompt" text area, test with one of the following sample prompts:
    - "Find a momentum alpha" (Expects formula: rank(momentum(close, 20)))
    - "Find a mean reversion alpha" (Expects formula: -zscore(close, 20))
    - "Find a momentum alpha confirmed by abnormal volume" (Expects formula: zscore(volume, 60) * rank(momentum(close, 20)))
    - "Find a volatility-aware trend alpha" (Expects formula: rank(momentum(close, 20)) - zscore(ts_std(close, 20), 60))
-6. Choose a Research Framing Style (e.g. balanced, conservative, aggressive).
-7. Click "Generate Alpha Idea". The dashboard updates the session state and the sidebar's default formula updates automatically.
-8. Navigate to the "Backtest Lab" tab and click "Run Backtest" (in the sidebar) to backtest the generated formula.
-9. Inspect the outputs:
-   - Tab "Alpha Formula" displays "Validation Result: VALID", referencing columns and operators used by the agent.
-   - Tab "Backtest Lab" renders the equity curve and drawdown charts, and displays a metrics summary (e.g. Sharpe ratio, total return) and recent signals.
-   - Tab "Risk Review" displays the decision (APPROVE, REDUCE, or REJECT), the recommended scale, and reasons.
-   - Tab "Research Report" compiles the results into a markdown research memo.
-10. In the "Research Report" tab, click "Generate Research Report" to generate the Markdown memo.
-11. Inspect the generated report in the dashboard. It will include performance metrics, AST validations, and risk reviews.
-12. Click "Save Experiment Artifacts" to persist the experiment. The dashboard will print:
-    - Experiment ID: `[experiment_id]`
-    - Report Path: `reports/experiments/[experiment_id]_report.md`
-    - Metadata Path: `reports/experiments/[experiment_id]_metadata.json`
+6. Choose a Research Framing Style (e.g., balanced, conservative, aggressive).
+7. Click "Generate Research Idea". The system updates the workspace session and automatically populates the sidebar formula input.
+8. Navigate to the "Formula Lab" tab and click "Validate Formula AST" to execute syntax safety checks.
+9. Click "Run Backtest" (either in the sidebar or within the Backtest Lab page) to evaluate strategy returns.
+10. Navigate to the "Risk Review" tab and click "Perform Risk Compliance Review" to run position scale calculations.
+11. Navigate to the "Research Memo" tab. Click "Compile Research Memo" to generate the Markdown report.
+12. Click "Save Experiment Artifacts" to persist the run. The terminal displays the ID and relative file paths on the local filesystem.
 
 ## Inspecting Saved Experiments
 
@@ -114,7 +113,7 @@ You can verify and view saved artifacts on the filesystem:
 
 ## Running Demo Scenarios
 
-The synthetic scenario selector in the Streamlit sidebar (Data Settings section) allows you to simulate different pricing regimes. You can also generate these via the command line:
+The synthetic scenario selector in the sidebar (Data Settings section) allows you to simulate different pricing regimes. You can also generate these via the command line:
 
 ```bash
 # Generate a bullish trend path:
@@ -135,7 +134,7 @@ python -m app.data.sample_generator --scenario volatile --days 1000 --seed 42
 
 ## Recommended Demo Path for Recruiters / Reviewers
 
-To showcase the complete research lifecycle (including risk management limits, approvals, and report generation), follow this recommended path in the Streamlit dashboard:
+To showcase the complete research lifecycle (including risk management limits, approvals, and report generation), follow this recommended path in the React research terminal:
 
 1. **Step 1: Risk Rejection Demonstration**
    - In the sidebar under **Data Settings**, set **Synthetic Scenario** to `random_walk` or `volatile` and click **Generate Sample Data**.

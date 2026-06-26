@@ -31,7 +31,7 @@ This version includes:
 - Basic rules-based risk decision overlay.
 - Research Report Agent for generating deterministic quantitative memos from strategy metrics.
 - Local, file-based Experiment Artifact Store.
-- Plain-text FastAPI server and Streamlit dashboard interface.
+- Plain-text FastAPI server and React research terminal interface.
 
 ## System Architecture
 
@@ -44,7 +44,7 @@ The project is structured as follows:
 - app/data/: Generates and cleans input OHLCV datasets.
 - app/agents/: Mock AI Alpha agent, Research Report Agent, artifact store, and report service.
 - app/api/: FastAPI schemas, routes, and endpoints.
-- dashboard/: Streamlit dashboard implementation.
+- frontend/: React-based custom research terminal workstation.
 
 ## Setup Instructions
 
@@ -72,10 +72,16 @@ pytest
 To start the FastAPI server:
 uvicorn app.main:app --reload
 
-### Run Streamlit Dashboard
+### Run React Research Terminal
 
-To launch the web interface:
-streamlit run dashboard/streamlit_app.py
+To install and launch the React workspace:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The web terminal is accessible at: http://localhost:5173
 
 ## Mock AI Alpha Research Agent
 
@@ -117,12 +123,13 @@ Saved experiments are written locally to:
 - reports/experiments/{experiment_id}_report.md
 - reports/experiments/{experiment_id}_metadata.json
 
-Dashboard Workflow:
-AI Alpha Research Desk -> Backtest Lab -> Risk Review -> Research Report -> Save Experiment Artifacts
-1. AI Alpha Research Desk: Submit a concept, generate a structured proposal, and check AST validation.
-2. Backtest Lab: Click 'Run Backtest' to view the equity curve and performance metrics.
-3. Risk Review: Access the post-backtest checklist to check the APPROVE, REDUCE, or REJECT status.
-4. Research Report: Click 'Generate Research Report' to compile the quantitative memo. Click 'Save Experiment Artifacts' to save the report and metadata files locally.
+Research Workstation Workflow:
+Research Desk -> Formula Lab -> Backtest Lab -> Risk Review -> Research Memo -> Experiment Artifacts
+1. Research Desk: Submit a natural-language concept and generate a structured research hypothesis.
+2. Formula Lab: Validate mathematical operators and sandbox security checks using AST validation.
+3. Backtest Lab: Run a vectorized historical simulation, comparing strategy equity curves against a buy-and-hold benchmark.
+4. Risk Review: Check quantitative limits checklist for APPROVE, REDUCE, or REJECT sizing recommendation decisions.
+5. Research Memo: Compile the full research memo and save local experiment metadata and report files.
 
 ## Benchmark Comparison
 
