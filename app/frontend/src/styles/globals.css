@@ -11,8 +11,8 @@ body {
   background-color: var(--bg-base);
   color: var(--text-primary);
   font-family: var(--font-family);
-  font-size: 11px;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
   height: 100vh;
@@ -58,7 +58,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .sidebar-subtitle {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-secondary);
   margin-top: 0.25rem;
 }
@@ -106,7 +106,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .form-group label {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-secondary);
   font-weight: 500;
 }
@@ -137,7 +137,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .status-label {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
   text-transform: uppercase;
   font-weight: 600;
@@ -145,7 +145,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .status-value {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -217,7 +217,7 @@ button {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
-  font-size: 12px;
+  font-size: 13px;
   text-align: center;
 }
 
@@ -244,7 +244,7 @@ button.secondary:hover {
 button.action-btn {
   width: 100%;
   padding: 0.65rem;
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
@@ -255,8 +255,8 @@ input, select, textarea {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   color: var(--text-primary);
-  padding: 0.45rem 0.6rem;
-  font-size: 12px;
+  padding: 0.5rem 0.75rem;
+  font-size: 13px;
   width: 100%;
 }
 
@@ -287,14 +287,14 @@ textarea {
 }
 
 .metric-card-label {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.02em;
 }
 
 .metric-card-value {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   font-family: var(--font-mono);
 }
@@ -310,7 +310,7 @@ table.data-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 table.data-table th {
@@ -320,7 +320,7 @@ table.data-table th {
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.05em;
 }
 
@@ -344,7 +344,7 @@ table.data-table tr:hover td {
   display: inline-block;
   padding: 0.15rem 0.5rem;
   border-radius: 2px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -414,7 +414,7 @@ table.data-table tr:hover td {
   border-radius: var(--border-radius);
   padding: 0.75rem;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   color: #38bdf8;
   white-space: pre-wrap;
   max-height: 250px;
@@ -423,7 +423,7 @@ table.data-table tr:hover td {
 
 /* Markdown view formatting */
 .markdown-view {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.6;
 }
 
@@ -437,9 +437,9 @@ table.data-table tr:hover td {
   padding-bottom: 0.25rem;
 }
 
-.markdown-view h1 { font-size: 18px; }
-.markdown-view h2 { font-size: 15px; }
-.markdown-view h3 { font-size: 13px; }
+.markdown-view h1 { font-size: 20px; }
+.markdown-view h2 { font-size: 17px; }
+.markdown-view h3 { font-size: 14px; }
 
 .markdown-view ul, .markdown-view ol {
   margin-left: 1.5rem;

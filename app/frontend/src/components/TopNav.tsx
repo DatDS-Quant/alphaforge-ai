@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useResearchStore } from '../state/researchStore';
 
 export const TopNav: React.FC = () => {
@@ -17,7 +17,8 @@ export const TopNav: React.FC = () => {
   return (
     <header className="top-nav">
       <div className="brand-section">
-        <span className="brand-name">AlphaForge Research Terminal</span>`r`n        <span className="brand-subtitle">Signal Research, Backtesting, and Risk Review</span>
+        <span className="brand-name">AlphaForge Research Terminal</span>
+        <span className="brand-subtitle">Signal Research, Backtesting, and Risk Review</span>
       </div>
       <nav className="nav-tabs">
         {tabList.map((tab) => (

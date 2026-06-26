@@ -2,7 +2,7 @@
 
 .app-shell {
   display: grid;
-  grid-template-rows: 40px 38px 24px 1fr;
+  grid-template-rows: 52px 42px 28px 1fr;
   height: 100vh;
   width: 100vw;
   background-color: var(--bg-base);
@@ -28,7 +28,7 @@
 }
 
 .brand-name {
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -36,7 +36,7 @@
 }
 
 .brand-subtitle {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -52,7 +52,7 @@
   border-radius: 0;
   color: var(--text-secondary);
   padding: 0 1.25rem;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   height: 100%;
   display: flex;
@@ -94,7 +94,7 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .toolbar-item label {
@@ -107,16 +107,16 @@
   background-color: var(--bg-base);
   border: 1px solid var(--border);
   color: var(--text-primary);
-  font-size: 11px;
+  font-size: 13px;
   padding: 0.15rem 0.4rem;
   border-radius: var(--border-radius);
-  height: 22px;
+  height: 28px;
   width: auto;
 }
 
 .toolbar-formula-preview {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 13px;
   color: var(--accent-gold);
   background-color: rgba(217, 178, 106, 0.05);
   padding: 0.2rem 0.5rem;
@@ -138,9 +138,9 @@
   border: 1px solid var(--border);
   color: var(--text-primary);
   padding: 0.2rem 0.6rem;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
-  height: 24px;
+  height: 28px;
   border-radius: var(--border-radius);
   cursor: pointer;
   display: flex;
@@ -177,7 +177,7 @@
   border-bottom: 1px solid var(--border);
   padding: 0 1rem;
   gap: 1.5rem;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -202,7 +202,7 @@
 /* Workspace Frame (Left Rail + Panels Content) */
 .workspace-frame {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 290px 1fr;
   overflow: hidden;
   height: 100%;
 }
@@ -225,7 +225,7 @@
 }
 
 .rail-section-title {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   color: var(--accent-gold);
@@ -241,7 +241,7 @@
 }
 
 .rail-form-group label {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-secondary);
   text-transform: uppercase;
 }
@@ -250,8 +250,8 @@
   background-color: var(--bg-base);
   border: 1px solid var(--border);
   color: var(--text-primary);
-  font-size: 11px;
-  padding: 0.3rem 0.45rem;
+  font-size: 13px;
+  padding: 0.45rem 0.6rem;
   border-radius: var(--border-radius);
 }
 
@@ -297,7 +297,7 @@
 }
 
 .terminal-panel-title {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   color: var(--text-primary);
@@ -333,7 +333,7 @@
 }
 
 .metric-tile-label {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--text-muted);
   text-transform: uppercase;
   font-weight: 600;
@@ -341,7 +341,7 @@
 }
 
 .metric-tile-value {
-  font-size: 14px;
+  font-size: 17px;
   font-weight: 700;
   font-family: var(--font-mono);
   color: var(--text-primary);
@@ -357,7 +357,7 @@ table.terminal-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 table.terminal-table th {
@@ -367,7 +367,7 @@ table.terminal-table th {
   font-weight: 700;
   color: var(--text-secondary);
   text-transform: uppercase;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 table.terminal-table td {
@@ -390,7 +390,7 @@ table.terminal-table tr:hover td {
   display: inline-block;
   padding: 0.1rem 0.4rem;
   border-radius: 1px;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   border: 1px solid transparent;
@@ -437,7 +437,7 @@ table.terminal-table tr:hover td {
   padding: 0.6rem 0.75rem;
   border-left: 2px solid var(--neutral-blue);
   background-color: rgba(58, 134, 200, 0.04);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .term-alert.info {
@@ -596,7 +596,7 @@ textarea::-webkit-scrollbar-thumb {
   border-radius: var(--border-radius);
   color: var(--accent-gold);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.55;
   margin-top: 0.25rem;
   overflow: auto;
@@ -613,7 +613,7 @@ textarea::-webkit-scrollbar-thumb {
   flex: 1;
   min-height: 150px;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
 }
 
@@ -632,7 +632,7 @@ textarea::-webkit-scrollbar-thumb {
 .mono-highlight {
   color: var(--accent-gold);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .mono-highlight.teal { color: var(--accent-teal); }
@@ -650,7 +650,7 @@ textarea::-webkit-scrollbar-thumb {
   border: 1px solid var(--border);
   color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   padding: 0.15rem 0.4rem;
 }
 
@@ -658,7 +658,7 @@ textarea::-webkit-scrollbar-thumb {
   align-items: center;
   color: var(--text-muted);
   display: flex;
-  font-size: 11px;
+  font-size: 13px;
   height: 100%;
   justify-content: center;
   text-align: center;
