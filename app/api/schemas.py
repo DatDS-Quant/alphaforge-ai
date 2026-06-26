@@ -76,6 +76,8 @@ class RiskResponse(BaseModel):
     decision: str = Field(..., description="APPROVE, REDUCE, or REJECT.")
     reasons: List[str]
     recommended_position_scale: float
-    recommended_scale: float = Field(..., description="Same as recommended_position_scale for frontend compatibility.")
+    recommended_scale: float = Field(
+        ..., description="Same as recommended_position_scale for frontend compatibility."
+    )
     disclaimer: str
     rule_findings: RuleFindings

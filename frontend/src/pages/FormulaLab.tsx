@@ -1,35 +1,18 @@
 import React from 'react';
 import { useResearchStore } from '../state/researchStore';
-import { apiClient } from '../api/client';
+import { useWorkflowActions } from '../hooks/useWorkflowActions';
 import { Panel } from '../components/Panel';
 import { RiskBadge } from '../components/RiskBadge';
+import { WorkflowPrerequisites } from '../components/WorkflowPrerequisites';
 
 export const FormulaLab: React.FC = () => {
   const {
     alphaFormula, setAlphaFormula,
-    dataPath,
     dataGenerated,
-    validation, setValidation,
-    loading, setLoading,
-    setError,
+    validation,
+    loading,
   } = useResearchStore();
-
-  const handleValidate = async () => {
-    if (!dataGenerated) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await apiClient.evaluateAlpha({
-        formula: alphaFormula,
-        data_path: dataPath,
-      });
-      setValidation(res);
-    } catch (err: any) {
-      setError(err.message || 'Failed to evaluate formula');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { generateData, validateFormula } = useWorkflowActions();
 
   const formulaExamples = [
     { title: 'Momentum Trend', expr: 'rank(momentum(close, 20))' },
@@ -40,137 +23,73 @@ export const FormulaLab: React.FC = () => {
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', height: '100%' }}>
-      {/* Left panel: Editor & Actions */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <Panel title="Formula Editor">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
             <div className="rail-form-group" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <label>Mathematical Alpha Equation Expression</label>
+              <label>Alpha Formula</label>
               <textarea
-                className="rail-textarea"
-                style={{ flex: 1, minHeight: '120px', fontSize: '13px', lineHeight: '1.5' }}
+                className="rail-textarea formula-editor"
                 value={alphaFormula}
                 onChange={(e) => setAlphaFormula(e.target.value)}
                 disabled={loading}
               />
             </div>
-
-            <div>
-              {!dataGenerated ? (
-                <div className="term-alert warning">
-                  Generate data first to evaluate formula values.
-                </div>
-              ) : (
-                <button
-                  onClick={handleValidate}
-                  disabled={loading || !alphaFormula.trim()}
-                  style={{ width: '100%', height: '28px', fontSize: '11px' }}
-                >
-                  {loading ? 'Analyzing syntax...' : 'Validate Formula'}
-                </button>
-              )}
+            {!dataGenerated && (
+              <div className="term-alert warning">Formula structure can be edited now, but value evaluation requires generated data.</div>
+            )}
+            <div className="workflow-actions-inline">
+              <button onClick={generateData} disabled={loading}>{loading ? 'Generating...' : 'Generate Data'}</button>
+              <button onClick={validateFormula} disabled={loading || !dataGenerated || !alphaFormula.trim()}>{loading ? 'Validating...' : 'Validate Formula'}</button>
             </div>
           </div>
         </Panel>
 
-        <Panel title="Alpha Operator Reference Examples">
+        <Panel title="Formula Examples">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '11px' }}>
-            {formulaExamples.map((ex, idx) => (
-              <div
-                key={idx}
-                style={{
-                  border: '1px solid var(--border)',
-                  padding: '0.4rem 0.6rem',
-                  cursor: 'pointer',
-                  backgroundColor: 'var(--bg-elevated)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-                onClick={() => setAlphaFormula(ex.expr)}
-              >
-                <strong>{ex.title}</strong>
-                <code style={{ color: 'var(--accent-gold)', fontSize: '10px' }}>{ex.expr}</code>
-              </div>
+            {formulaExamples.map((ex) => (
+              <button className="formula-example" key={ex.title} onClick={() => setAlphaFormula(ex.expr)} disabled={loading}>
+                <strong>{ex.title}</strong><code>{ex.expr}</code>
+              </button>
             ))}
           </div>
         </Panel>
       </div>
 
-      {/* Right panel: Validation Details */}
-      <Panel title="AST Validation Checker Analysis">
+      <Panel title="Validation Result">
         {validation ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '11px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '11px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <strong>Validation Status:</strong>
-              <RiskBadge decision={validation.status} />
+              <strong>Status</strong>
+              <RiskBadge decision={validation.is_valid ? 'VALID' : 'INVALID'} />
             </div>
-
-            {validation.error ? (
+            {!validation.is_valid ? (
               <div className="term-alert error">
-                <strong>Syntax / Operator Error:</strong>
-                <p style={{ marginTop: '0.2rem', fontFamily: 'var(--font-mono)' }}>{validation.error}</p>
+                <strong>Formula errors</strong>
+                <ul style={{ paddingLeft: '1rem', marginTop: '0.25rem' }}>
+                  {validation.errors.map((err) => <li key={err}>{err}</li>)}
+                </ul>
               </div>
             ) : (
               <>
-                <div>
-                  <strong>Referenced Asset Fields (Columns):</strong>
-                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
-                    {validation.referenced_columns.map((c, i) => (
-                      <span key={i} style={{
-                        fontFamily: 'var(--font-mono)',
-                        backgroundColor: 'var(--bg-elevated)',
-                        border: '1px solid var(--border)',
-                        padding: '0.15rem 0.4rem',
-                        fontSize: '10px',
-                      }}>
-                        {c}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <strong>Referenced Operators:</strong>
-                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
-                    {validation.referenced_operators.length === 0 ? (
-                      <span style={{ color: 'var(--text-muted)' }}>None</span>
-                    ) : (
-                      validation.referenced_operators.map((o, i) => (
-                        <span key={i} style={{
-                          fontFamily: 'var(--font-mono)',
-                          backgroundColor: 'var(--bg-elevated)',
-                          border: '1px solid var(--border)',
-                          padding: '0.15rem 0.4rem',
-                          fontSize: '10px',
-                        }}>
-                          {o}
-                        </span>
-                      ))
-                    )}
-                  </div>
-                </div>
-
-                <div className="term-alert success">
-                  <strong>AST Safety Check Passed</strong>
-                  <p style={{ marginTop: '0.2rem', lineHeight: '1.4' }}>
-                    The formula syntax was parsed successfully. There are no unsafe operations, attribute resolutions, or namespace injections detected. Ready for historical simulation backtest execution.
-                  </p>
-                </div>
+                <div><strong>Referenced Columns</strong><div className="tag-row">{validation.referenced_columns.map((c) => <span key={c}>{c}</span>)}</div></div>
+                <div><strong>Referenced Operators</strong><div className="tag-row">{validation.referenced_operators.length ? validation.referenced_operators.map((o) => <span key={o}>{o}</span>) : <span>None</span>}</div></div>
+                <div className="term-alert success">Formula validated. Ready to run a backtest.</div>
               </>
             )}
           </div>
         ) : (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-            color: 'var(--text-muted)',
-            fontSize: '11px',
-          }}>
-            Click Validate Formula to analyze expression tokens and check compiler safety.
-          </div>
+          <WorkflowPrerequisites
+            title="Validation Pending"
+            description="Generate data, then validate the active formula before backtesting."
+            items={[
+              { label: 'Data', status: dataGenerated ? 'Ready' : 'Missing', ready: dataGenerated },
+              { label: 'Formula', status: alphaFormula.trim() ? 'Ready' : 'Missing', ready: !!alphaFormula.trim() },
+            ]}
+            primaryActionLabel={dataGenerated ? 'Validate Formula' : 'Generate Data'}
+            onPrimaryAction={dataGenerated ? validateFormula : generateData}
+            messageVariant={dataGenerated ? 'neutral' : 'warning'}
+          />
         )}
       </Panel>
     </div>

@@ -1,25 +1,76 @@
 import React from 'react';
 import { useResearchStore } from '../state/researchStore';
+import { apiClient } from '../api/client';
 import { Panel } from '../components/Panel';
 import { MetricTile } from '../components/MetricTile';
 import { RiskBadge } from '../components/RiskBadge';
 
 export const TerminalHome: React.FC = () => {
   const {
-    dataGenerated,
+    dataGenerated, setDataGenerated,
     alphaIdea,
-    backtestResult,
-    riskReview,
+    validation,
+    backtestResult, setBacktestResult,
+    riskReview, setRiskReview,
+    savedArtifact,
     scenario,
     days,
     seed,
     alphaFormula,
     setActiveTab,
+    dataPath, signalMode, upperQuantile, lowerQuantile, transactionCost, slippage,
+    loading, setLoading,
+    setError, setReport, resetAll
   } = useResearchStore();
+
+  const handleGenerateData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await apiClient.generateData({
+        days,
+        seed,
+        scenario,
+        output_path: dataPath,
+      });
+      setDataGenerated(true);
+      resetAll();
+      setActiveTab('Formula Lab');
+    } catch (err: any) {
+      setError(err.message || 'Failed to generate data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRunBacktest = async () => {
+    if (!dataGenerated) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await apiClient.runBacktest({
+        formula: alphaFormula,
+        data_path: dataPath,
+        signal_mode: signalMode,
+        upper_quantile: upperQuantile,
+        lower_quantile: lowerQuantile,
+        transaction_cost: transactionCost,
+        slippage: slippage,
+      });
+      setBacktestResult(res);
+      setRiskReview(null);
+      setReport(null);
+      setActiveTab('Backtest');
+    } catch (err: any) {
+      setError(err.message || 'Failed to run backtest');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getSystemStatus = () => {
     if (!dataGenerated) return 'Awaiting Dataset Initialization';
-    if (!alphaIdea) return 'Dataset Initialized - Ready for Alpha Generation';
+    if (!alphaFormula) return 'Dataset Initialized - Ready for Alpha Generation';
     if (!backtestResult) return 'Alpha Expression Defined - Ready for Historical Backtest';
     if (!riskReview) return 'Backtest Finished - Ready for Compliance Audit';
     return 'Research Memo Ready - Awaiting Experiment Serialization';
@@ -33,7 +84,7 @@ export const TerminalHome: React.FC = () => {
     if (d === 'REDUCE') {
       return 'Use reduced sizing only under simplified assumptions and run robustness tests.';
     }
-    return 'Approved only under simplified synthetic and vectorized assumptions. Validate further before any real-world use.';
+    return 'Approved only under simplified research assumptions. Validate further before any real-world use.';
   };
 
   return (
@@ -45,87 +96,213 @@ export const TerminalHome: React.FC = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
         {/* Main Status Panel */}
-        <Panel title="Research Pipeline Status">
+        <Panel title="Research Pipeline status">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.25rem 0' }}>
             <div>
               <span style={{ color: 'var(--text-secondary)', fontSize: '10px', textTransform: 'uppercase' }}>Active Stage</span>
-              <div style={{ fontSize: '15px', fontWeight: 'bold', color: 'var(--accent-gold)', marginTop: '0.15rem' }}>
+              <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--accent-gold)', marginTop: '0.15rem' }}>
                 {getSystemStatus()}
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div>
-                <strong>Generated Data:</strong>
-                <p style={{ color: 'var(--text-secondary)', marginTop: '0.15rem' }}>
-                  {dataGenerated ? `Ready (${days} days, seed ${seed})` : 'None'}
+                <strong>Generated Data Path:</strong>
+                <p style={{ color: 'var(--text-secondary)', marginTop: '0.15rem', fontFamily: 'var(--font-mono)' }}>
+                  {dataPath}
                 </p>
               </div>
               <div>
                 <strong>Scenario Mode:</strong>
                 <p style={{ color: 'var(--text-secondary)', marginTop: '0.15rem', fontFamily: 'var(--font-mono)' }}>
-                  {scenario}
+                  {scenario} ({days} days, seed {seed})
                 </p>
               </div>
             </div>
-
-            {!dataGenerated && (
-              <div style={{
-                border: '1px dashed var(--border)',
-                padding: '1.5rem',
-                borderRadius: 'var(--border-radius)',
-                textAlign: 'center',
-                backgroundColor: 'rgba(255, 255, 255, 0.01)',
-                marginTop: '0.5rem',
-              }}>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                  Start by generating synthetic data and an alpha research idea.
-                </p>
-                <button
-                  onClick={() => setActiveTab('Research Desk')}
-                  style={{
-                    backgroundColor: 'var(--accent-teal)',
-                    color: 'var(--bg-base)',
-                    fontSize: '11px',
-                    height: '24px',
-                    padding: '0 0.75rem',
-                  }}
-                >
-                  Go to Research Desk
-                </button>
-              </div>
-            )}
           </div>
         </Panel>
 
         {/* Configuration Summary */}
         <Panel title="Active Alpha Reference">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '11px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '11px' }}>
             <div>
               <strong>Mathematical Expression:</strong>
               <pre style={{
                 backgroundColor: 'var(--bg-elevated)',
                 border: '1px solid var(--border)',
-                padding: '0.5rem',
+                padding: '0.4rem',
                 borderRadius: 'var(--border-radius)',
                 fontFamily: 'var(--font-mono)',
                 color: 'var(--accent-gold)',
                 whiteSpace: 'pre-wrap',
                 marginTop: '0.25rem',
+                fontSize: '11px'
               }}>
                 {alphaFormula || 'None'}
               </pre>
             </div>
-
-            <div>
-              <strong>Hypothesis Description:</strong>
-              <p style={{ color: 'var(--text-secondary)', marginTop: '0.25rem', lineHeight: '1.4' }}>
-                {alphaIdea?.hypothesis || 'No active hypothesis generated yet. Use the Research Desk tab to configure one.'}
-              </p>
-            </div>
           </div>
         </Panel>
       </div>
+
+      {/* Reusable Pipeline Status Table */}
+      <Panel title="Quantitative Research Pipeline Status">
+        <div className="terminal-table-container">
+          <table className="terminal-table">
+            <thead>
+              <tr>
+                <th style={{ width: '40px' }}>Step</th>
+                <th>Process Area</th>
+                <th>Current Status</th>
+                <th>Requirement / State</th>
+                <th style={{ textAlign: 'right' }}>Direct Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>Generate Data</td>
+                <td>
+                  <span className={`term-badge ${dataGenerated ? 'teal' : 'red'}`}>
+                    {dataGenerated ? 'Ready' : 'Missing'}
+                  </span>
+                </td>
+                <td>{dataGenerated ? `${days} candles generated` : 'Requires synthetic data path generation'}</td>
+                <td style={{ textAlign: 'right' }}>
+                  <button
+                    onClick={handleGenerateData}
+                    disabled={loading}
+                    className="toolbar-btn"
+                    style={{ fontSize: '10px', height: '20px', padding: '0 0.5rem', display: 'inline-flex', marginLeft: 'auto' }}
+                  >
+                    {loading ? '...' : 'Generate Data'}
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>Alpha Generation</td>
+                <td>
+                  <span className={`term-badge ${alphaIdea || alphaFormula ? 'teal' : 'amber'}`}>
+                    {alphaIdea ? 'Ready (AI)' : alphaFormula ? 'Ready (Manual)' : 'Pending'}
+                  </span>
+                </td>
+                <td style={{ fontFamily: 'var(--font-mono)' }}>
+                  {alphaFormula ? (alphaFormula.length > 50 ? alphaFormula.slice(0, 47) + '...' : alphaFormula) : 'No active formula configured'}
+                </td>
+                <td style={{ textAlign: 'right' }}>
+                  <button
+                    onClick={() => setActiveTab('Research Desk')}
+                    className="toolbar-btn"
+                    style={{ fontSize: '10px', height: '20px', padding: '0 0.5rem', display: 'inline-flex', marginLeft: 'auto' }}
+                  >
+                    Go to Research Desk
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>Formula Validation</td>
+                <td>
+                  <span className={`term-badge ${validation ? (validation.status === 'VALID' ? 'teal' : 'red') : 'blue'}`}>
+                    {validation ? validation.status : 'Pending'}
+                  </span>
+                </td>
+                <td>{validation ? (validation.status === 'VALID' ? 'AST Validated' : 'Validation Errors present') : 'Verify AST sandbox constraints'}</td>
+                <td style={{ textAlign: 'right' }}>
+                  <button
+                    onClick={() => setActiveTab('Formula Lab')}
+                    className="toolbar-btn"
+                    style={{ fontSize: '10px', height: '20px', padding: '0 0.5rem', display: 'inline-flex', marginLeft: 'auto' }}
+                  >
+                    Go to Formula Lab
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>Vectorized Backtest</td>
+                <td>
+                  <span className={`term-badge ${backtestResult ? 'teal' : 'blue'}`}>
+                    {backtestResult ? 'Completed' : 'Pending'}
+                  </span>
+                </td>
+                <td>{backtestResult ? `${backtestResult.metrics.number_of_trades} trades simulated` : 'Evaluate return against baseline benchmark'}</td>
+                <td style={{ textAlign: 'right' }}>
+                  <button
+                    onClick={handleRunBacktest}
+                    disabled={loading || !dataGenerated || !alphaFormula}
+                    className="toolbar-btn primary-btn"
+                    style={{ fontSize: '10px', height: '20px', padding: '0 0.5rem', display: 'inline-flex', marginLeft: 'auto' }}
+                  >
+                    Run Backtest
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>Risk Review Compliance</td>
+                <td>
+                  <span className={`term-badge ${riskReview ? (riskReview.decision === 'REJECT' ? 'red' : riskReview.decision === 'REDUCE' ? 'amber' : 'teal') : 'blue'}`}>
+                    {riskReview ? riskReview.decision : 'Pending'}
+                  </span>
+                </td>
+                <td>{riskReview ? `Recommended Sizing Scale: ${(riskReview.recommended_scale * 100).toFixed(0)}%` : 'Verify drawdown and turnover rules'}</td>
+                <td style={{ textAlign: 'right' }}>
+                  <button
+                    onClick={() => setActiveTab('Risk')}
+                    disabled={!backtestResult}
+                    className="toolbar-btn"
+                    style={{ fontSize: '10px', height: '20px', padding: '0 0.5rem', display: 'inline-flex', marginLeft: 'auto' }}
+                  >
+                    Go to Risk
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>Research Report Memo</td>
+                <td>
+                  <span className={`term-badge ${report ? 'teal' : 'blue'}`}>
+                    {report ? 'Generated' : 'Pending'}
+                  </span>
+                </td>
+                <td>{report ? 'Markdown research memo is ready' : 'Compile quantitative verdict analysis'}</td>
+                <td style={{ textAlign: 'right' }}>
+                  <button
+                    onClick={() => setActiveTab('Memo')}
+                    disabled={!backtestResult || !riskReview}
+                    className="toolbar-btn"
+                    style={{ fontSize: '10px', height: '20px', padding: '0 0.5rem', display: 'inline-flex', marginLeft: 'auto' }}
+                  >
+                    Go to Memo
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>Save Artifacts</td>
+                <td>
+                  <span className={`term-badge ${savedArtifact ? 'teal' : 'blue'}`}>
+                    {savedArtifact ? 'Saved' : 'Not Saved'}
+                  </span>
+                </td>
+                <td>{savedArtifact ? `Saved under ID: ${savedArtifact.experiment_id.slice(0, 8)}...` : 'Serialize report and metadata configurations locally'}</td>
+                <td style={{ textAlign: 'right' }}>
+                  <button
+                    onClick={() => setActiveTab('Artifacts')}
+                    disabled={!savedArtifact}
+                    className="toolbar-btn"
+                    style={{ fontSize: '10px', height: '20px', padding: '0 0.5rem', display: 'inline-flex', marginLeft: 'auto' }}
+                  >
+                    Go to Artifacts
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </Panel>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         {/* Compliance Panel */}

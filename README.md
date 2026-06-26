@@ -1,4 +1,4 @@
-# AlphaForge Research Terminal
+﻿# AlphaForge Research Terminal
 
 Signal Research, Backtesting, and Risk Review.
 
@@ -20,6 +20,23 @@ AlphaForge AI is NOT a live trading bot, a real-time portfolio execution system,
 6. Research Report Generation: Compile quantitative metrics, risk reviews, and mathematical details into a structured quantitative research memo.
 7. Experiment Artifact Saving: Serialize the full experiment details (metadata JSON and report Markdown) directly to the local filesystem.
 
+### Research Terminal Workflow Modes
+
+The React app now presents one explicit seven-step workstation flow:
+
+1. Generate Data
+2. Generate Research Idea or enter Manual Formula
+3. Validate Formula
+4. Run Backtest
+5. Review Risk
+6. Generate Memo
+7. Save Artifacts
+
+Two workflows are supported:
+- Generated idea mode: Research Desk creates the title, hypothesis, formula, explanation, risk notes, and trace, then copies the formula into the active editor.
+- Manual formula mode: the user enters a formula directly in the Left Rail or Formula Lab. Memo generation still works by using transparent fallback title, hypothesis, explanation, and risk notes.
+
+Memo generation requires formula, backtest metrics, and risk decision. It does not require a generated idea, and a REJECT risk decision is still a valid research result. The terminal is a research workstation for synthetic signal research, not a trading bot or profitability claim system.
 ## Current MVP Scope
 
 This version includes:

@@ -49,35 +49,33 @@ npm run dev
 
 This opens a browser tab at http://localhost:5173 with seven professional workspace tabs: Home, Research Desk, Formula Lab, Backtest, Risk, Memo, and Artifacts.
 
-## Sample Quantitative Workflow Example
+## Manual QA Script
 
-1. Start the backend API server and launch the React research terminal.
-2. In the sidebar Settings panel, configure the target parameters:
-   - Days to Generate: 1000
-   - Seed: 42
-   - Synthetic Scenario: random_walk
-   - Data File Path: data/sample_ohlcv.csv
-   - Alpha Formula Expression: rank(momentum(close, 20))
-   - Signal Mode: long_short
-   - Upper Quantile: 0.7
-   - Lower Quantile: 0.3
-   - Transaction Cost Rate: 0.0005
-   - Slippage Rate: 0.0005
-3. Click "Gen Data" (either in the toolbar or Left Rail). The system generates and saves the file to the local disk.
-4. Navigate to the "Research Desk" tab.
-5. In the "Research Prompt" text area, test with one of the following sample prompts:
-   - "Find a momentum alpha" (Expects formula: rank(momentum(close, 20)))
-   - "Find a mean reversion alpha" (Expects formula: -zscore(close, 20))
-   - "Find a momentum alpha confirmed by abnormal volume" (Expects formula: zscore(volume, 60) * rank(momentum(close, 20)))
-   - "Find a volatility-aware trend alpha" (Expects formula: rank(momentum(close, 20)) - zscore(ts_std(close, 20), 60))
-6. Choose a Research Framing Style (e.g., balanced, conservative, aggressive).
-7. Click "Generate Research Idea" (or "Gen Idea" in the toolbar). The system updates the workspace session and automatically populates the formula input.
-8. Navigate to the "Formula Lab" tab and click "Validate Formula" to execute syntax safety checks.
-9. Click "Run Backtest" (or "Backtest" in the toolbar) to evaluate strategy returns and show double-curve equity charts in "Backtest" page.
-10. Navigate to the "Risk" tab and click "Perform Risk Compliance Audit" (or "Risk Review" in the toolbar) to run position scale calculations.
-11. Navigate to the "Memo" tab. Click "Compile Research Memo" (or "Gen Memo" in the toolbar) to generate the Markdown report.
-12. Click "Save Experiment Artifacts" (or "Save" in the toolbar) to persist the run. The terminal displays the ID and relative file paths on the local filesystem.
+### Scenario A: Generated Idea Mode
 
+1. Generate data from the Left Rail or Home panel.
+2. Open Research Desk.
+3. Enter a prompt and click "Generate Research Idea".
+4. Open Formula Lab and click "Validate Formula".
+5. Open Backtest and click "Run Backtest".
+6. Open Risk and click "Review Risk".
+7. Open Memo and click "Compile Research Memo".
+8. Click "Save Experiment Artifacts".
+9. Open Artifacts and verify the session artifact paths are shown.
+
+### Scenario B: Manual Formula Mode
+
+1. Do not generate a research idea.
+2. Enter a formula manually in the Left Rail or Formula Lab, for example `rank(momentum(close, 20))`.
+3. Generate data from the Left Rail, Home, Formula Lab, or Backtest prerequisite panel.
+4. Open Formula Lab and click "Validate Formula".
+5. Open Backtest and click "Run Backtest".
+6. Open Risk and click "Review Risk".
+7. Open Memo and click "Compile Research Memo" in manual formula mode.
+8. Click "Save Experiment Artifacts".
+9. Open Artifacts and verify the session artifact paths are shown.
+
+A REJECT risk decision is still a valid research result and should still support memo generation.
 ## Inspecting Saved Experiments
 
 You can verify and view saved artifacts on the filesystem:
@@ -137,23 +135,63 @@ python -m app.data.sample_generator --scenario volatile --days 1000 --seed 42
 To showcase the complete research lifecycle (including risk management limits, approvals, and report generation), follow this recommended path in the React research terminal:
 
 1. **Step 1: Risk Rejection Demonstration**
-   - In the toolbar under **Scenario**, set the **Synthetic Scenario** to `random_walk` or `volatile` and click **Gen Data**.
+   - In the Left Rail, set **Scenario** to `random_walk` or `volatile` and click **Generate Data**.
    - Go to the **Research Desk** page and enter a prompt: "Find a momentum alpha".
-   - Click **Generate Research Idea** (or **Gen Idea** in the toolbar).
-   - Go to the **Backtest** page and click **Run Backtest** (or **Backtest** in the toolbar).
+   - Click **Generate Research Idea** .
+   - Go to the **Backtest** page and click **Run Backtest** .
    - Review the results. If the strategy suffers from severe drawdowns (e.g. drawdown exceeds -25%) or lacks sufficient trade volume under these market conditions, navigate to the **Risk** tab. The status strip at the top will indicate **RISK: REJECT** (or REDUCE).
-   - In the **Memo** page, click **Compile Research Memo** (or **Gen Memo** in the toolbar) to see the suggested action: "Do not promote this strategy. Investigate risk drivers, reduce turnover, and run robustness tests."
+   - In the **Memo** page, click **Compile Research Memo**  to see the suggested action: "Do not promote this strategy. Investigate risk drivers, reduce turnover, and run robustness tests."
 
 2. **Step 2: Strategy Sizing / Approval Demonstration**
-   - In the toolbar, change **Scenario** to `trend_up`. Click **Gen Data**. (A strong positive drift is highly favorable to momentum signals).
-   - Navigate to the **Backtest** page and click **Run Backtest** (or **Backtest** in the toolbar).
+   - In the Left Rail, change **Scenario** to `trend_up`. click **Generate Data**. (A strong positive drift is highly favorable to momentum signals).
+   - Navigate to the **Backtest** page and click **Run Backtest** .
    - The strategy return should be significantly improved. Navigate to the **Risk** tab. The status strip at the top will show **RISK: APPROVE** or **REDUCE**.
    - Review the metrics tiles and tables comparing strategy returns against the baseline buy-and-hold benchmark return.
 
 3. **Step 3: Generate and Save Experiment Artifacts**
    - Navigate to the **Memo** page.
-   - Click **Compile Research Memo** (or **Gen Memo** in the toolbar). Notice that the report begins with a clear **Research Verdict** outlining the decision, primary reason, total return, Sharpe, max drawdown, and suggested action, followed by the "Full Research Memo" expander.
-   - Click **Save Experiment Artifacts** (or **Save** in the toolbar).
+   - Click **Compile Research Memo** . Notice that the report begins with a clear **Research Verdict** outlining the decision, primary reason, total return, Sharpe, max drawdown, and suggested action, followed by the "Full Research Memo" expander.
+   - Click **Save Experiment Artifacts** .
    - Verify the generated Markdown and JSON files are stored in the `reports/experiments/` folder.
+
+## Manual QA Script
+
+### Scenario A: Generated Idea Workflow
+
+1. Navigate to the **Home** or **Formula Lab** page and click **Generate Data** (or do this from the Left Rail).
+2. Verify that the status strip updates to show **DATA: READY**.
+3. Open the **Research Desk** page.
+4. Enter the prompt `"Find a momentum alpha confirmed by abnormal volume"` and select the style `balanced`.
+5. Click **Generate Research Idea** directly under the inputs.
+6. Wait for the quantitative proposal details and trace to render. Confirm that the status strip shows **IDEA: READY**.
+7. Navigate to the **Formula Lab** page.
+8. Click **Validate Formula** to execute AST compliance. Verify that validation status shows **VALID**.
+9. Navigate to the **Backtest** page.
+10. Click **Run Backtest** (or use the button in the panel header). Wait for charts and metrics to render. Verify the status strip shows **BACKTEST: COMPLETED**.
+11. Navigate to the **Risk** page.
+12. Click **Review Risk** (or use the button in the panel header). Verify that compliance rule findings and verdict scale render.
+13. Navigate to the **Memo** page.
+14. Click **Compile Research Memo** (or use the button in the panel header).
+15. Verify that the executive summary, verdict, and full report markdown render.
+16. Click **Save Experiment Artifacts** under the Disk Serialization section.
+17. Verify that the complete success message displays.
+18. Go to the **Artifacts** page and check that the paths and metadata preview are successfully loaded.
+
+### Scenario B: Manual Formula Workflow
+
+1. Open the **Formula Lab** or use the Left Rail.
+2. In the active formula input (Left Rail or Formula Lab editor), manually enter a formula (e.g., `-zscore(close, 20)`).
+3. Click **Generate Data** in the Left Rail or Home tab if not generated yet.
+4. Navigate to the **Formula Lab** page.
+5. Click **Validate Formula** and verify validation succeeds.
+6. Navigate to the **Backtest** page.
+7. Click **Run Backtest** and wait for simulation curves to load.
+8. Navigate to the **Risk** page.
+9. Click **Review Risk** and verify that compliance rule findings show.
+10. Navigate to the **Memo** page.
+11. Confirm that you can click **Compile Research Memo** directly even though no research idea was generated.
+12. Verify that the fallback fields load (e.g., Title shows "Manual Formula Research Memo").
+13. Click **Save Experiment Artifacts**.
+14. Navigate to the **Artifacts** page and verify the metadata preview loads correctly.
 
 

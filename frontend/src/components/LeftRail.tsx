@@ -1,5 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { useResearchStore } from '../state/researchStore';
+import { useWorkflowActions } from '../hooks/useWorkflowActions';
 
 export const LeftRail: React.FC = () => {
   const {
@@ -14,6 +15,8 @@ export const LeftRail: React.FC = () => {
     slippage, setSlippage,
     loading,
   } = useResearchStore();
+
+  const { generateData } = useWorkflowActions();
 
   return (
     <aside className="left-rail">
@@ -69,6 +72,14 @@ export const LeftRail: React.FC = () => {
             disabled={loading}
           />
         </div>
+
+        <button
+          onClick={generateData}
+          disabled={loading}
+          style={{ width: '100%', height: '24px', fontSize: '10px', marginTop: '0.5rem' }}
+        >
+          {loading ? 'Generating...' : 'Generate Data'}
+        </button>
       </div>
 
       {/* Signal Setup */}

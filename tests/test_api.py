@@ -201,3 +201,63 @@ def test_post_report_generate_and_save(tmp_path, monkeypatch):
     del payload_invalid["formula"]  # Missing required field
     response_err = client.post("/report/generate", json=payload_invalid)
     assert response_err.status_code == 422
+
+
+def test_report_generate_manual_formula_reject_without_profitability_claim():
+    """
+    Manual formula mode should generate a memo without a generated idea and still support REJECT decisions.
+    """
+    payload = {
+        "title": "Manual Formula Research Memo",
+        "hypothesis": "This memo evaluates a manually supplied single-asset alpha signal formula under the current synthetic research configuration.",
+        "formula": "rank(momentum(close, 20))",
+        "required_columns": ["close"],
+        "expected_behavior": "The signal behavior is inferred from the validated formula and evaluated through vectorized backtesting.",
+        "risk_notes": [
+            "This memo was generated from a manual formula without a prior generated research idea.",
+            "Results are synthetic research outputs, not real-market evidence.",
+        ],
+        "explanation": "No generated research explanation is available because the workflow started from a manual formula.",
+        "validation": {
+            "is_valid": True,
+            "errors": [],
+            "warnings": [],
+            "referenced_columns": ["close"],
+            "referenced_operators": ["rank", "momentum"],
+        },
+        "metrics": {
+            "total_return": -0.08,
+            "annualized_return": -0.04,
+            "sharpe": -0.3,
+            "sortino": -0.2,
+            "max_drawdown": -0.32,
+            "win_rate": 0.42,
+            "profit_factor": 0.7,
+            "turnover": 0.8,
+            "number_of_trades": 12,
+        },
+        "risk_decision": {
+            "decision": "REJECT",
+            "reasons": ["Max drawdown breached limit."],
+            "recommended_position_scale": 0.0,
+            "recommended_scale": 0.0,
+        },
+        "backtest_config": {
+            "data_path": "data/sample_ohlcv.csv",
+            "mode": "long_short",
+            "upper_quantile": 0.7,
+            "lower_quantile": 0.3,
+            "transaction_cost": 0.0005,
+            "slippage": 0.0005,
+        },
+    }
+
+    response = client.post("/report/generate", json=payload)
+    assert response.status_code == 200
+    report = response.json()["report_markdown"]
+    assert "Manual Formula Research Memo" in report
+    assert "**Decision**: REJECT" in report
+    assert "Do not promote this strategy" in report
+    lower_report = report.lower()
+    assert "guaranteed" not in lower_report
+    assert "real-market performance" in lower_report

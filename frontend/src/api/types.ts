@@ -1,4 +1,4 @@
-export interface DataGenerateRequest {
+﻿export interface DataGenerateRequest {
   days: number;
   seed: number;
   scenario: string;
@@ -7,13 +7,26 @@ export interface DataGenerateRequest {
 
 export interface DataGenerateResponse {
   message: string;
+  output_path: string;
+  row_count: number;
 }
 
 export interface AgentTrace {
   detected_theme: string;
-  formula_template_selected: string;
+  formula_template: string;
   validation_status: string;
   warnings: string[];
+}
+
+export interface AlphaIdea {
+  title: string;
+  hypothesis: string;
+  formula: string;
+  required_columns: string[];
+  expected_behavior: string;
+  risk_notes: string[];
+  explanation: string;
+  tags: string[];
 }
 
 export interface AlphaGenerateRequest {
@@ -22,13 +35,8 @@ export interface AlphaGenerateRequest {
 }
 
 export interface AlphaGenerateResponse {
-  title: string;
-  hypothesis: string;
-  formula: string;
-  required_columns: string[];
-  expected_behavior: string;
-  risk_notes: string;
-  explanation: string;
+  idea: AlphaIdea;
+  validation: AlphaEvaluateResponse;
   warnings: string[];
   trace: AgentTrace;
 }
@@ -39,10 +47,12 @@ export interface AlphaEvaluateRequest {
 }
 
 export interface AlphaEvaluateResponse {
-  status: 'VALID' | 'INVALID';
-  error: string | null;
+  is_valid: boolean;
+  errors: string[];
+  warnings: string[];
   referenced_columns: string[];
   referenced_operators: string[];
+  alpha_preview?: number[] | null;
 }
 
 export interface BacktestMetrics {
@@ -55,16 +65,16 @@ export interface BacktestMetrics {
   profit_factor: number;
   turnover: number;
   number_of_trades: number;
-  buy_hold_total_return: number;
-  strategy_excess_return_vs_buy_hold: number;
-  strategy_correlation_to_asset_return: number;
-  exposure_ratio: number;
+  buy_hold_total_return?: number;
+  strategy_excess_return_vs_buy_hold?: number;
+  strategy_correlation_to_asset_return?: number;
+  exposure_ratio?: number;
 }
 
 export interface BacktestRunRequest {
   formula: string;
   data_path: string;
-  signal_mode: string;
+  mode: string;
   upper_quantile: number;
   lower_quantile: number;
   transaction_cost: number;
@@ -75,11 +85,9 @@ export interface BacktestRunResponse {
   metrics: BacktestMetrics;
   equity_curve: number[];
   drawdown: number[];
-  buy_hold_equity_curve: number[];
   dates: string[];
   signals: number[];
-  prices: number[];
-  strategy_returns: number[];
+  trades: number[];
 }
 
 export interface RiskEvaluateRequest {
@@ -94,7 +102,9 @@ export interface RiskEvaluateRequest {
 
 export interface RiskEvaluateResponse {
   decision: 'APPROVE' | 'REDUCE' | 'REJECT';
+  recommended_position_scale: number;
   recommended_scale: number;
+  disclaimer: string;
   reasons: string[];
   rule_findings: {
     max_drawdown: string;
@@ -108,8 +118,9 @@ export interface BacktestConfig {
   days: number;
   seed: number;
   scenario: string;
+  data_path: string;
   formula: string;
-  signal_mode: string;
+  mode: string;
   upper_quantile: number;
   lower_quantile: number;
   transaction_cost: number;
@@ -122,7 +133,7 @@ export interface ReportGenerateRequest {
   formula: string;
   required_columns: string[];
   expected_behavior: string;
-  risk_notes: string;
+  risk_notes: string[];
   explanation: string;
   validation: AlphaEvaluateResponse;
   metrics: BacktestMetrics;

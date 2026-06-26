@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useResearchStore } from '../state/researchStore';
 
 export const StatusStrip: React.FC = () => {
@@ -12,7 +12,7 @@ export const StatusStrip: React.FC = () => {
     validation,
   } = useResearchStore();
 
-  const valStatus = validation ? validation.status : 'Pending';
+  const valStatus = validation ? (validation.is_valid ? 'VALID' : 'INVALID') : 'Pending';
 
   const getColor = (status: string) => {
     const s = status.toUpperCase();
