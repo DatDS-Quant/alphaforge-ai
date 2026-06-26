@@ -117,3 +117,26 @@ def test_post_risk_evaluate():
     res_json = response.json()
     assert res_json["decision"] == "APPROVE"
     assert len(res_json["reasons"]) > 0
+
+
+def test_post_alpha_generate():
+    """
+    Verify the AI generation endpoint works for a valid prompt and rejects empty inputs.
+    """
+    # Valid volume-themed prompt
+    payload = {
+        "user_prompt": "Find a momentum alpha confirmed by abnormal volume",
+        "preferred_style": "balanced",
+    }
+    response = client.post("/alpha/generate", json=payload)
+    assert response.status_code == 200
+    res_json = response.json()
+    assert "idea" in res_json
+    assert res_json["idea"]["formula"] == "zscore(volume, 60) * rank(momentum(close, 20))"
+    assert res_json["validation"]["is_valid"] is True
+    assert len(res_json["warnings"]) > 0
+
+    # Short prompt (rejected by router custom length check)
+    payload_short = {"user_prompt": "ab"}
+    response = client.post("/alpha/generate", json=payload_short)
+    assert response.status_code == 400 or response.status_code == 422

@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 import yaml
 
+from app.agents.service import generate_and_validate_alpha_idea
 from app.core.backtester.engine import run_backtest
 from app.core.expression_engine.evaluator import evaluate_expression
 from app.core.expression_engine.validator import validate_expression
@@ -48,6 +49,10 @@ if "metrics" not in st.session_state:
     st.session_state["metrics"] = None
 if "risk_result" not in st.session_state:
     st.session_state["risk_result"] = None
+if "generated_formula" not in st.session_state:
+    st.session_state["generated_formula"] = "rank(momentum(close, 20))"
+if "generated_idea" not in st.session_state:
+    st.session_state["generated_idea"] = None
 
 # Sidebar parameters
 st.sidebar.title("AlphaForge AI Configuration")
@@ -62,7 +67,7 @@ seed = st.sidebar.number_input(
 data_path = st.sidebar.text_input("Data File Path", value=default_path)
 
 st.sidebar.subheader("Alpha & Backtest Settings")
-formula = st.sidebar.text_input("Alpha Formula", value="rank(momentum(close, 20))")
+formula = st.sidebar.text_input("Alpha Formula", value=st.session_state["generated_formula"])
 signal_mode = st.sidebar.selectbox(
     "Signal Mode", ["long_short", "long_flat"], index=0 if default_mode == "long_short" else 1
 )
@@ -164,7 +169,88 @@ st.title("AlphaForge AI Quant Research Platform")
 st.text("Quant Research, Backtesting, and Risk Management Interface")
 
 # Tabs definition - standard ASCII names, no emojis
-tab_formula, tab_backtest, tab_risk = st.tabs(["Alpha Formula", "Backtest Lab", "Risk Review"])
+tab_ai, tab_formula, tab_backtest, tab_risk = st.tabs(
+    ["AI Alpha Research Desk", "Alpha Formula", "Backtest Lab", "Risk Review"]
+)
+
+# AI Tab
+with tab_ai:
+    st.header("AI Alpha Research Desk")
+    st.write("Enter your natural-language trading concept to generate a structured alpha formula.")
+
+    # Prompt text area
+    user_prompt = st.text_area(
+        "Your Alpha Concept", value="Find a momentum alpha confirmed by abnormal volume"
+    )
+
+    # Style selector
+    preferred_style = st.selectbox(
+        "Research Framing Style", options=["balanced", "conservative", "aggressive"], index=0
+    )
+
+    btn_ai = st.button("Generate Alpha Idea")
+
+    if btn_ai:
+        if len(user_prompt.strip()) < 3:
+            st.error("Error: Concept prompt must be at least 3 characters long.")
+        else:
+            try:
+                # Generate idea
+                idea_res = generate_and_validate_alpha_idea(user_prompt, preferred_style)
+                st.session_state["generated_idea"] = idea_res
+                st.session_state["generated_formula"] = idea_res.idea.formula
+                st.success(
+                    "Success: Alpha idea generated! Check the sidebar and other tabs to review."
+                )
+                # Force rerun so sidebar formula value updates immediately
+                if hasattr(st, "rerun"):
+                    st.rerun()
+                else:
+                    st.experimental_rerun()
+            except Exception as e:
+                st.error(f"Generation error: {str(e)}")
+
+    # Display current idea if exists
+    if st.session_state["generated_idea"] is not None:
+        idea_res = st.session_state["generated_idea"]
+        idea = idea_res.idea
+
+        st.subheader(f"Title: {idea.title}")
+        st.text(f"Formula: {idea.formula}")
+
+        st.write("Hypothesis:")
+        st.write(idea.hypothesis)
+
+        st.write("Expected Behavior:")
+        st.write(idea.expected_behavior)
+
+        st.write("Required Columns:")
+        st.write(idea.required_columns)
+
+        st.write("Risk Notes:")
+        for note in idea.risk_notes:
+            st.write(f"- {note}")
+
+        st.write("Explanation:")
+        st.write(idea.explanation)
+
+        st.write("Tags:")
+        st.write(", ".join(idea.tags))
+
+        # Formula validation
+        st.subheader("AST Validation Status")
+        if idea_res.validation.is_valid:
+            st.write("Validation Status: VALID")
+        else:
+            st.write("Validation Status: INVALID")
+            for err in idea_res.validation.errors:
+                st.write(f"- {err}")
+
+        # Warnings
+        if idea_res.warnings:
+            st.subheader("Research Warnings")
+            for wrn in idea_res.warnings:
+                st.write(f"- {wrn}")
 
 # 1. Formula Tab
 with tab_formula:

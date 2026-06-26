@@ -58,9 +58,17 @@ This opens a browser tab (typically at http://localhost:8501) with three plain-t
    - Transaction Cost Rate: 0.0005
    - Slippage Rate: 0.0005
 3. Click "Generate Sample Data". The dashboard generates and saves data/sample_ohlcv.csv.
-4. Click "Run Backtest". The dashboard validates the formula AST, evaluates the alpha values, generates lookahead-free signals, runs the backtester, computes metrics, and runs risk rules.
-5. Inspect the outputs:
-   - Tab "Alpha Formula" displays "Validation Result: VALID", referencing column "close" and operators "rank", "momentum".
+4. Navigate to the "AI Alpha Research Desk" tab.
+5. In the "Your Alpha Concept" text area, test with one of the following sample prompts:
+   - "Find a momentum alpha" (Expects formula: rank(momentum(close, 20)))
+   - "Find a mean reversion alpha" (Expects formula: -zscore(close, 20))
+   - "Find a momentum alpha confirmed by abnormal volume" (Expects formula: zscore(volume, 60) * rank(momentum(close, 20)))
+   - "Find a volatility-aware trend alpha" (Expects formula: rank(momentum(close, 20)) - zscore(ts_std(close, 20), 60))
+6. Choose a Research Framing Style (e.g. balanced, conservative, aggressive).
+7. Click "Generate Alpha Idea". The dashboard updates the session state and the sidebar's default formula updates automatically.
+8. Navigate to the "Backtest Lab" tab and click "Run Backtest" (in the sidebar) to backtest the generated formula.
+9. Inspect the outputs:
+   - Tab "Alpha Formula" displays "Validation Result: VALID", referencing columns and operators used by the agent.
    - Tab "Backtest Lab" renders the equity curve and drawdown charts, and displays a metrics summary (e.g. Sharpe ratio, total return) and recent signals.
    - Tab "Risk Review" displays the decision (APPROVE, REDUCE, or REJECT), the recommended scale, and reasons.
 

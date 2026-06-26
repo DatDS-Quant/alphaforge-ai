@@ -23,20 +23,26 @@ The repository utilizes a modular package layout:
 6. app/api/
    - schemas.py: Input and output models using Pydantic.
    - routes.py: Exposes functionality as REST endpoints.
-7. dashboard/
+7. app/agents/
+   - schemas.py: Pydantic schemas for request and responses.
+   - mock_alpha_agent.py: Class mapping text inputs to deterministic formulas.
+   - service.py: Generates, validates, and appends warning messages to proposals.
+8. dashboard/
    - streamlit_app.py: Provides the user dashboard interface.
 
 ## Operational Data Flow
 
 Below is the execution flow during an evaluation run:
 
-1. Synthetic daily OHLCV files are loaded and sorted by the loader, validating required columns.
-2. The user submits a formula string (e.g. rank(momentum(close, 20))).
-3. The validator parses the string using Python's AST module, ensuring that only allowed columns and operators are used, and that unsafe constructs (like imports, lambda expressions, subscripts, and dunders) are rejected.
-4. The evaluator binds the columns from the dataset to the allowed mathematical operators inside a restricted environment, executing the formula using Python's eval function to output a clean alpha Series.
-5. The signal generator calculates historical quantiles of the alpha Series (lags the thresholds by 1 period to prevent lookahead) and assigns buy, sell, or hold actions.
-6. The backtester shifts positions by 1 period to prevent lookahead bias and simulates performance, deducting transaction fees and slippage whenever a position changes.
-7. The metrics module compiles performance stats (Sharpe, Sortino, drawdowns), while the risk engine runs rules checks to APPROVE, REDUCE, or REJECT position scales.
+1. The user enters a natural-language alpha concept in the AI Alpha Research Desk tab.
+2. The concept is parsed by the Mock AI Alpha Research Agent, which returns a structured research hypothesis and mathematical formula.
+3. The formula is validated using Python's AST parser to ensure it contains only allowed components and is safe from malicious injections.
+4. If valid, the formula is automatically set as the active sidebar formula.
+5. Daily OHLCV data is loaded and returns are calculated.
+6. The expression engine evaluates the formula in a restricted sandbox environment to generate the alpha values.
+7. The signal engine calculates lookahead-free signal thresholds based on shifting historical quantiles of the alpha.
+8. The backtester shifts positions by 1 period to prevent lookahead bias, executes trades, and computes strategy returns.
+9. Metrics are evaluated, and the risk engine reviews the strategy, returning an APPROVE, REDUCE, or REJECT recommendation.
 
 ## Module Responsibilities
 
@@ -52,6 +58,9 @@ Performs vector multiplications of the asset returns against lagged position sig
 ### Risk and Metrics Engines
 Calculate risk statistics and apply logic gates. If a strategy's drawdowns exceed limits or trade frequency is too low, the system flags the strategy, reducing exposure scaling or rejecting the strategy.
 
+### AI Alpha Research Agent
+Provides a deterministic rule-based framework that parses user intent keywords and returns structured proposals including hypotheses, tags, formulas, risk notes, and explanations. The service layer combines this with mathematical formula validation, and appends warnings about simplification or safety boundaries.
+
 ## Limitations
 
 - Vectorized backtesting: Vectorized simulations run instantly but do not model execution delays, order queue placement, margin requirements, or granular trade order matching.
@@ -61,5 +70,5 @@ Calculate risk statistics and apply logic gates. If a strategy's drawdowns excee
 ## Next Planned Phases
 
 - Database Layer: Introduce SQL-based storage for alpha ideas, backtest configurations, and test run outcomes.
-- Mock AI Agents: Add offline agents utilizing local models to help generate expressions or translate natural language ideas into formula strings.
+- Real LLM Integration: Swap the deterministic mock agent for actual local or API-based LLMs once connection infrastructure is configured.
 - Multi-Asset Support: Extend the expression engine and signal generator to handle panels of assets.

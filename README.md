@@ -21,6 +21,7 @@ AlphaForge AI is NOT a live trading bot, a real-time portfolio execution system,
 ## Current MVP Scope
 
 This version includes:
+- Deterministic Mock AI Alpha Research Agent for translating natural-language concepts into valid mathematical formulas.
 - Synthetic daily OHLCV random-walk generation.
 - Validated mathematical syntax parser using Python Abstract Syntax Trees (AST).
 - Vectorized quant engine with lookahead-free quantile thresholds.
@@ -71,11 +72,36 @@ uvicorn app.main:app --reload
 To launch the web interface:
 streamlit run dashboard/streamlit_app.py
 
+## Mock AI Alpha Research Agent
+
+AlphaForge AI includes a deterministic, rule-based Mock AI Alpha Research Agent. It translates natural-language prompts into lookahead-free mathematical formulas based on keyword matches.
+
+Why Mock Mode is Useful:
+- No Quota or Key Usage: Operates entirely offline without requiring paid API keys or network latency.
+- Reproducible Demos: Ensures the same formula is generated for the same prompt, facilitating reliable test runs.
+- Pluggable Structure: Exposes the exact schemas and endpoints required, allowing a real LLM model or genetic programming engine to be swapped in later without modifying other layers.
+
+API Endpoint:
+POST /alpha/generate
+Request:
+{
+  "user_prompt": "Find a momentum alpha confirmed by abnormal volume",
+  "preferred_style": "balanced"
+}
+Response yields:
+zscore(volume, 60) * rank(momentum(close, 20))
+
+Dashboard Workflow:
+AI Alpha Research Desk -> Backtest Lab -> Risk Review
+1. AI Alpha Research Desk: Submit a concept, generate a structured proposal, and check AST validation.
+2. Backtest Lab: The generated formula is automatically set as the default in the sidebar. Click 'Run Backtest' to view the equity curve and performance.
+3. Risk Review: Access the post-backtest checklist to check the APPROVE, REDUCE, or REJECT status.
+
 ## Roadmap
 
-- Phase 2: Add SQLAlchemy database layer and local SQLite support.
-- Phase 3: Integrate offline, local mock LLM agents for natural language to formula translation.
-- Phase 4: Implement multi-asset portfolio backtesting and risk optimization models.
+- Phase 2: Add SQLAlchemy database layer and local SQLite support. (Planned)
+- Phase 3: Integrate offline, local mock LLM agents for natural language to formula translation. (Completed)
+- Phase 4: Implement multi-asset portfolio backtesting and risk optimization models. (Planned)
 
 ## Disclaimer
 

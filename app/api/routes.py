@@ -2,6 +2,8 @@ import os
 
 from fastapi import APIRouter, HTTPException, status
 
+from app.agents.schemas import AlphaIdeaRequest, AlphaIdeaResponse
+from app.agents.service import generate_and_validate_alpha_idea
 from app.api.schemas import (
     BacktestRequest,
     BacktestResponse,
@@ -194,4 +196,27 @@ def evaluate_risk_endpoint(payload: RiskRequest):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error evaluating risk rules: {str(e)}"
+        ) from e
+
+
+@router.post("/alpha/generate", response_model=AlphaIdeaResponse)
+def generate_alpha_idea_endpoint(payload: AlphaIdeaRequest):
+    """
+    Generate and validate a quantitative alpha idea from a natural-language prompt.
+    """
+    if len(payload.user_prompt.strip()) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User prompt is too short. Minimum length is 3 characters.",
+        )
+    try:
+        result = generate_and_validate_alpha_idea(
+            user_prompt=payload.user_prompt,
+            preferred_style=payload.preferred_style or "balanced",
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating alpha idea: {str(e)}",
         ) from e
