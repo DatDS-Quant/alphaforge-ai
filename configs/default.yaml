@@ -1,0 +1,19 @@
+# Default configuration for AlphaForge AI
+
+data_generator:
+  seed: 42
+  days: 1000
+  output_path: "data/sample_ohlcv.csv"
+
+backtester:
+  mode: "long_short"
+  default_upper_quantile: 0.7
+  default_lower_quantile: 0.3
+  transaction_cost: 0.0005
+  slippage: 0.0005
+
+risk:
+  max_drawdown_limit: -0.25
+  min_trades: 5
+  sharpe_reduce_threshold: 1.0
+  turnover_reduce_threshold: 0.6
