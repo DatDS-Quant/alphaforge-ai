@@ -42,7 +42,7 @@ This opens the interactive Swagger UI interface to inspect and trigger GET /heal
 ### Run React Research Terminal
 To install and launch the React workspace:
 ```bash
-cd frontend
+cd app/frontend
 npm install
 npm run dev
 ```

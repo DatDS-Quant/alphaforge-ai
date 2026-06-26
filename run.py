@@ -23,7 +23,7 @@ def run_cmd(cmd, cwd=None):
 
 def main():
     root_dir = os.path.dirname(os.path.abspath(__file__))
-    frontend_dir = os.path.join(root_dir, "frontend")
+    frontend_dir = os.path.join(root_dir, "app", "frontend")
 
     # 1. Check if Node is installed
     try:

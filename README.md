@@ -1,4 +1,4 @@
-﻿# AlphaForge Research Terminal
+# AlphaForge Research Terminal
 
 Signal Research, Backtesting, and Risk Review.
 
@@ -61,7 +61,7 @@ The project is structured as follows:
 - app/data/: Generates and cleans input OHLCV datasets.
 - app/agents/: Mock AI Alpha agent, Research Report Agent, artifact store, and report service.
 - app/api/: FastAPI schemas, routes, and endpoints.
-- frontend/: React-based custom research terminal workstation.
+- app/frontend/: React-based custom research terminal workstation.
 
 ## Setup Instructions
 
@@ -93,7 +93,7 @@ uvicorn app.main:app --reload
 
 To install and launch the React workspace:
 ```bash
-cd frontend
+cd app/frontend
 npm install
 npm run dev
 ```

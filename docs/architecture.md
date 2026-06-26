@@ -31,8 +31,8 @@ The repository utilizes a modular package layout:
    - report_agent.py: Builds deterministic markdown quantitative report memos.
    - artifact_store.py: Creates filesystem-safe experiment IDs and writes metadata JSON and report Markdown to disk.
    - report_service.py: Service coordinator linking the report agent and artifact store.
-8. frontend/
-   - React-based custom research terminal workspace.
+8. app/frontend/
+   - React-based custom research terminal workstation.
 
 ## Operational Data Flow
 
