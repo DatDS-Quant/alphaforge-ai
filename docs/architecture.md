@@ -27,6 +27,10 @@ The repository utilizes a modular package layout:
    - schemas.py: Pydantic schemas for request and responses.
    - mock_alpha_agent.py: Class mapping text inputs to deterministic formulas.
    - service.py: Generates, validates, and appends warning messages to proposals.
+   - report_schemas.py: Input and output models for quantitative reports.
+   - report_agent.py: Builds deterministic markdown quantitative report memos.
+   - artifact_store.py: Creates filesystem-safe experiment IDs and writes metadata JSON and report Markdown to disk.
+   - report_service.py: Service coordinator linking the report agent and artifact store.
 8. dashboard/
    - streamlit_app.py: Provides the user dashboard interface.
 
@@ -43,6 +47,8 @@ Below is the execution flow during an evaluation run:
 7. The signal engine calculates lookahead-free signal thresholds based on shifting historical quantiles of the alpha.
 8. The backtester shifts positions by 1 period to prevent lookahead bias, executes trades, and computes strategy returns.
 9. Metrics are evaluated, and the risk engine reviews the strategy, returning an APPROVE, REDUCE, or REJECT recommendation.
+10. The user requests a Research Report, which deterministically constructs a structured Markdown memo combining all evaluation steps.
+11. The user saves the experiment, which generates a filesystem-safe experiment ID and writes the metadata JSON and report Markdown to the local filesystem.
 
 ## Module Responsibilities
 
@@ -61,8 +67,12 @@ Calculate risk statistics and apply logic gates. If a strategy's drawdowns excee
 ### AI Alpha Research Agent
 Provides a deterministic rule-based framework that parses user intent keywords and returns structured proposals including hypotheses, tags, formulas, risk notes, and explanations. The service layer combines this with mathematical formula validation, and appends warnings about simplification or safety boundaries.
 
+### Research Report Agent & Artifact Store
+The Research Report Agent formats the experimental inputs, validations, metrics, and decisions into a consistent, clear Markdown document. The Artifact Store cleans out oversized arrays (like raw daily equity curves or drawdowns) and outputs the remaining structured parameters to metadata JSON and Markdown files.
+
 ## Limitations
 
+- File-based Storage: Experiment details are saved directly as flat files on the local filesystem. A database engine is not yet used to query or search over historical runs.
 - Vectorized backtesting: Vectorized simulations run instantly but do not model execution delays, order queue placement, margin requirements, or granular trade order matching.
 - Single asset focus: Currently configured for single-stock or single-index alpha expressions. It does not support cross-sectional ranking across multiple assets simultaneously yet.
 - Synthetic random walk: The synthetic generator provides deterministic pricing paths, but does not capture macro regimes, orderbook imbalances, or volume dynamics.
@@ -72,3 +82,4 @@ Provides a deterministic rule-based framework that parses user intent keywords a
 - Database Layer: Introduce SQL-based storage for alpha ideas, backtest configurations, and test run outcomes.
 - Real LLM Integration: Swap the deterministic mock agent for actual local or API-based LLMs once connection infrastructure is configured.
 - Multi-Asset Support: Extend the expression engine and signal generator to handle panels of assets.
+

@@ -21,7 +21,7 @@ Run the unit and smoke test suite using:
 pytest
 
 Expected output:
-21 passed in X.XXs
+40 passed in X.XXs
 
 ### Run API Server
 Start the FastAPI backend server using:
@@ -37,13 +37,13 @@ INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
 Once the API server is running, open your web browser and navigate to:
 http://127.0.0.1:8000/docs
 
-This opens the interactive Swagger UI interface to inspect and trigger GET /health, POST /data/generate, POST /alpha/evaluate, POST /backtest/run, and POST /risk/evaluate endpoints.
+This opens the interactive Swagger UI interface to inspect and trigger GET /health, POST /data/generate, POST /alpha/evaluate, POST /backtest/run, POST /risk/evaluate, POST /report/generate, and POST /experiments/save endpoints.
 
 ### Run Streamlit Dashboard
 Launch the frontend dashboard interface using:
 streamlit run dashboard/streamlit_app.py
 
-This opens a browser tab (typically at http://localhost:8501) with three plain-text tabs: Alpha Formula, Backtest Lab, and Risk Review.
+This opens a browser tab (typically at http://localhost:8501) with five plain-text tabs: AI Alpha Research Desk, Alpha Formula, Backtest Lab, Risk Review, and Research Report.
 
 ## Sample Quantitative Workflow Example
 
@@ -71,6 +71,22 @@ This opens a browser tab (typically at http://localhost:8501) with three plain-t
    - Tab "Alpha Formula" displays "Validation Result: VALID", referencing columns and operators used by the agent.
    - Tab "Backtest Lab" renders the equity curve and drawdown charts, and displays a metrics summary (e.g. Sharpe ratio, total return) and recent signals.
    - Tab "Risk Review" displays the decision (APPROVE, REDUCE, or REJECT), the recommended scale, and reasons.
+   - Tab "Research Report" compiles the results into a markdown research memo.
+10. In the "Research Report" tab, click "Generate Research Report" to generate the Markdown memo.
+11. Inspect the generated report in the dashboard. It will include performance metrics, AST validations, and risk reviews.
+12. Click "Save Experiment Artifacts" to persist the experiment. The dashboard will print:
+    - Experiment ID: `[experiment_id]`
+    - Report Path: `reports/experiments/[experiment_id]_report.md`
+    - Metadata Path: `reports/experiments/[experiment_id]_metadata.json`
+
+## Inspecting Saved Experiments
+
+You can verify and view saved artifacts on the filesystem:
+1. Navigate to the `reports/experiments/` folder.
+2. Open `{experiment_id}_report.md` to see the complete markdown research memo.
+3. Open `{experiment_id}_metadata.json` to verify the JSON metadata dictionary. Check that:
+   - The JSON contains metrics, validation status, risk decision, backtest config, limitations, and next steps.
+   - Large raw arrays like `equity_curve` and `drawdown` are successfully excluded.
 
 ## Common Failure Cases and Fixes
 
@@ -95,3 +111,4 @@ This opens a browser tab (typically at http://localhost:8501) with three plain-t
 - Fix: Run uvicorn on another port:
   uvicorn app.main:app --port 8080 --reload
   And ensure the API calls or environment values match the new port.
+

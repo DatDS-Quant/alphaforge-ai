@@ -10,13 +10,15 @@ AlphaForge AI is an open-source AI engineering platform for finance designed to 
 
 AlphaForge AI is NOT a live trading bot, a real-time portfolio execution system, or a high-frequency trading platform. It does not connect directly to brokerage APIs for order routing, and does not provide financial or investment advice.
 
-## Core Workflow
+### Core Workflow
 
 1. Data Generation and Loading: Generate synthetic OHLCV time-series data or load local CSV files to clean, validate, and compute asset returns.
 2. Expression Evaluation: Formulate alpha expressions using windowed operations (like rolling standard deviations, ranks, or moving averages) and evaluate them securely on time-series data.
 3. Signal Generation: Generate entry and exit signals using threshold rules like rolling or expanding quantiles to avoid future lookahead leakage.
 4. Vectorized Backtesting: Simulate trading strategy performance with transaction fees and slippage using historical shifted positions.
 5. Risk Evaluation: Apply deterministic checklist rules (e.g. drawdown checks, transaction counts) to approve, reduce, or reject strategy position sizes.
+6. Research Report Generation: Compile quantitative metrics, risk reviews, and mathematical details into a structured quantitative research memo.
+7. Experiment Artifact Saving: Serialize the full experiment details (metadata JSON and report Markdown) directly to the local filesystem.
 
 ## Current MVP Scope
 
@@ -27,6 +29,8 @@ This version includes:
 - Vectorized quant engine with lookahead-free quantile thresholds.
 - Essential performance metrics (Sharpe, Sortino, drawdown, win rate, profit factor, turnover).
 - Basic rules-based risk decision overlay.
+- Research Report Agent for generating deterministic quantitative memos from strategy metrics.
+- Local, file-based Experiment Artifact Store.
 - Plain-text FastAPI server and Streamlit dashboard interface.
 
 ## System Architecture
@@ -38,7 +42,8 @@ The project is structured as follows:
 - app/core/metrics/: Computes performance statistics.
 - app/core/risk/: Evaluates risk criteria.
 - app/data/: Generates and cleans input OHLCV datasets.
-- app/api/: FastAPI schemas and routes.
+- app/agents/: Mock AI Alpha agent, Research Report Agent, artifact store, and report service.
+- app/api/: FastAPI schemas, routes, and endpoints.
 - dashboard/: Streamlit dashboard implementation.
 
 ## Setup Instructions
@@ -91,17 +96,39 @@ Request:
 Response yields:
 zscore(volume, 60) * rank(momentum(close, 20))
 
+## Research Report Agent & Artifact Saving
+
+The platform includes a deterministic Research Report Agent that converts the generated alpha idea, validation output, backtest metrics, and risk decisions into a professional research memo. Users can then save the experiment locally.
+
+API Endpoints:
+
+1. Generate Report:
+POST /report/generate
+Request: ResearchReportInput Pydantic model containing title, hypothesis, formula, required_columns, expected_behavior, risk_notes, explanation, validation, metrics, risk_decision, and backtest_config.
+Response: ResearchReport Pydantic model containing title, summary, report_markdown, limitations, and next_steps.
+
+2. Save Experiment:
+POST /experiments/save
+Request: ResearchReportInput
+Response: ExperimentArtifact containing experiment_id, report_path, metadata_path, and created_at.
+
+File Locations:
+Saved experiments are written locally to:
+- reports/experiments/{experiment_id}_report.md
+- reports/experiments/{experiment_id}_metadata.json
+
 Dashboard Workflow:
-AI Alpha Research Desk -> Backtest Lab -> Risk Review
+AI Alpha Research Desk -> Backtest Lab -> Risk Review -> Research Report -> Save Experiment Artifacts
 1. AI Alpha Research Desk: Submit a concept, generate a structured proposal, and check AST validation.
-2. Backtest Lab: The generated formula is automatically set as the default in the sidebar. Click 'Run Backtest' to view the equity curve and performance.
+2. Backtest Lab: Click 'Run Backtest' to view the equity curve and performance metrics.
 3. Risk Review: Access the post-backtest checklist to check the APPROVE, REDUCE, or REJECT status.
+4. Research Report: Click 'Generate Research Report' to compile the quantitative memo. Click 'Save Experiment Artifacts' to save the report and metadata files locally.
 
 ## Roadmap
 
 - Phase 2: Add SQLAlchemy database layer and local SQLite support. (Planned)
 - Phase 3: Integrate offline, local mock LLM agents for natural language to formula translation. (Completed)
-- Phase 4: Implement multi-asset portfolio backtesting and risk optimization models. (Planned)
+- Phase 4: Implement Research Report Agent and lightweight file-based experiment artifact saving. (Completed)
 
 ## Disclaimer
 

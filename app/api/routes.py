@@ -2,6 +2,8 @@ import os
 
 from fastapi import APIRouter, HTTPException, status
 
+from app.agents.report_schemas import ExperimentArtifact, ResearchReport, ResearchReportInput
+from app.agents.report_service import generate_research_report, save_research_experiment
 from app.agents.schemas import AlphaIdeaRequest, AlphaIdeaResponse
 from app.agents.service import generate_and_validate_alpha_idea
 from app.api.schemas import (
@@ -219,4 +221,32 @@ def generate_alpha_idea_endpoint(payload: AlphaIdeaRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generating alpha idea: {str(e)}",
+        ) from e
+
+
+@router.post("/report/generate", response_model=ResearchReport)
+def generate_report_endpoint(payload: ResearchReportInput):
+    """
+    Generate a quantitative alpha research report.
+    """
+    try:
+        return generate_research_report(payload)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate report: {str(e)}",
+        ) from e
+
+
+@router.post("/experiments/save", response_model=ExperimentArtifact)
+def save_experiment_endpoint(payload: ResearchReportInput):
+    """
+    Save the research report and metadata as local experiment artifacts.
+    """
+    try:
+        return save_research_experiment(payload)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save experiment: {str(e)}",
         ) from e

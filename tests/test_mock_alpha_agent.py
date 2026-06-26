@@ -137,7 +137,13 @@ def test_dashboard_importable():
     streamlit_mock.sidebar.number_input.return_value = 42
     streamlit_mock.sidebar.selectbox.return_value = "long_short"
     streamlit_mock.sidebar.slider.return_value = 0.5
-    streamlit_mock.tabs.return_value = (MagicMock(), MagicMock(), MagicMock(), MagicMock())
+    streamlit_mock.tabs.return_value = (
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+    )
     streamlit_mock.session_state = {}
     sys.modules["streamlit"] = streamlit_mock
 

@@ -4,6 +4,8 @@ import pandas as pd
 import streamlit as st
 import yaml
 
+from app.agents.report_schemas import ResearchReportInput
+from app.agents.report_service import generate_research_report, save_research_experiment
 from app.agents.service import generate_and_validate_alpha_idea
 from app.core.backtester.engine import run_backtest
 from app.core.expression_engine.evaluator import evaluate_expression
@@ -53,6 +55,11 @@ if "generated_formula" not in st.session_state:
     st.session_state["generated_formula"] = "rank(momentum(close, 20))"
 if "generated_idea" not in st.session_state:
     st.session_state["generated_idea"] = None
+if "generated_report" not in st.session_state:
+    st.session_state["generated_report"] = None
+if "saved_artifact" not in st.session_state:
+    st.session_state["saved_artifact"] = None
+
 
 # Sidebar parameters
 st.sidebar.title("AlphaForge AI Configuration")
@@ -104,6 +111,8 @@ if btn_generate:
 
 # Handle Backtest Action (runs backtest and updates metrics + risk state)
 if btn_backtest:
+    st.session_state["generated_report"] = None
+    st.session_state["saved_artifact"] = None
     # 1. Validate formula
     val_res = validate_expression(formula)
     if not val_res.is_valid:
@@ -154,7 +163,10 @@ if btn_backtest:
 
 # Handle Risk Review Action separately if requested
 if btn_risk:
+    st.session_state["generated_report"] = None
+    st.session_state["saved_artifact"] = None
     if st.session_state["metrics"] is None:
+
         st.sidebar.error("Error: Please run the backtest first before reviewing risk.")
     else:
         try:
@@ -169,8 +181,8 @@ st.title("AlphaForge AI Quant Research Platform")
 st.text("Quant Research, Backtesting, and Risk Management Interface")
 
 # Tabs definition - standard ASCII names, no emojis
-tab_ai, tab_formula, tab_backtest, tab_risk = st.tabs(
-    ["AI Alpha Research Desk", "Alpha Formula", "Backtest Lab", "Risk Review"]
+tab_ai, tab_formula, tab_backtest, tab_risk, tab_report = st.tabs(
+    ["AI Alpha Research Desk", "Alpha Formula", "Backtest Lab", "Risk Review", "Research Report"]
 )
 
 # AI Tab
@@ -357,3 +369,117 @@ with tab_risk:
         st.info(
             "No active risk review found. Run a backtest in the sidebar to evaluate risk guidelines."
         )
+
+# 4. Research Report Tab
+with tab_report:
+    st.header("Alpha Research Report")
+
+    # Check if necessary data is available
+    metrics_val = st.session_state.get("metrics")
+    risk_result_val = st.session_state.get("risk_result")
+
+    if metrics_val is None or risk_result_val is None:
+        st.info("Required data is missing. Please follow these steps:")
+        st.text(
+            "1. Generate an alpha idea or enter a formula.\n"
+            "2. Run backtest.\n"
+            "3. Review risk.\n"
+            "4. Generate report."
+        )
+    else:
+        # Check if we can use the generated idea
+        idea_response = st.session_state.get("generated_idea")
+        use_generated = False
+        if idea_response is not None and idea_response.idea.formula == formula:
+            use_generated = True
+
+        if use_generated:
+            idea = idea_response.idea
+            title_val = idea.title
+            hypothesis_val = idea.hypothesis
+            required_cols_val = idea.required_columns
+            expected_behavior_val = idea.expected_behavior
+            risk_notes_val = idea.risk_notes
+            explanation_val = idea.explanation
+            if hasattr(idea_response.validation, "model_dump"):
+                validation_val = idea_response.validation.model_dump()
+            else:
+                validation_val = idea_response.validation.dict()
+        else:
+            # Fallback for manual workflow
+            title_val = f"Research Report: {formula}"
+            hypothesis_val = f"Quantitative analysis of mathematical alpha formula `{formula}`."
+            val_res = validate_expression(formula)
+            required_cols_val = val_res.referenced_columns if val_res.is_valid else ["close"]
+            expected_behavior_val = "Directional trading signal based on threshold quantiles."
+            risk_notes_val = [
+                "Manual entry: risk parameters must be verified under multiple regimes."
+            ]
+            explanation_val = f"This formula was manually entered: `{formula}` and evaluated."
+            if hasattr(val_res, "model_dump"):
+                validation_val = val_res.model_dump()
+            else:
+                validation_val = val_res.dict()
+
+        # Build backtest config
+        backtest_config_val = {
+            "data_path": data_path,
+            "mode": signal_mode,
+            "upper_quantile": upper_q,
+            "lower_quantile": lower_q,
+            "transaction_cost": transaction_cost,
+            "slippage": slippage,
+        }
+
+        # Build ResearchReportInput
+        report_input = ResearchReportInput(
+            title=title_val,
+            hypothesis=hypothesis_val,
+            formula=formula,
+            required_columns=required_cols_val,
+            expected_behavior=expected_behavior_val,
+            risk_notes=risk_notes_val,
+            explanation=explanation_val,
+            validation=validation_val,
+            metrics=metrics_val,
+            risk_decision=risk_result_val,
+            backtest_config=backtest_config_val,
+        )
+
+        col_buttons = st.columns(2)
+        with col_buttons[0]:
+            btn_gen_report = st.button("Generate Research Report")
+            if btn_gen_report:
+                try:
+                    report = generate_research_report(report_input)
+                    st.session_state["generated_report"] = report
+                    st.session_state["saved_artifact"] = None  # Reset saved status
+                    st.success("Success: Research Report generated successfully.")
+                except Exception as e:
+                    st.error(f"Failed to generate report: {str(e)}")
+
+        with col_buttons[1]:
+            # Show save button if report is already generated
+            if st.session_state.get("generated_report") is not None:
+                btn_save_artifact = st.button("Save Experiment Artifacts")
+                if btn_save_artifact:
+                    try:
+                        artifact = save_research_experiment(report_input)
+                        st.session_state["saved_artifact"] = artifact
+                        st.success("Success: Experiment artifacts saved successfully.")
+                    except Exception as e:
+                        st.error(f"Failed to save experiment: {str(e)}")
+
+        # If report exists, display it
+        report = st.session_state.get("generated_report")
+        if report is not None:
+            st.subheader("Report Content")
+            st.markdown(report.report_markdown)
+
+        # If artifact exists, display paths
+        artifact = st.session_state.get("saved_artifact")
+        if artifact is not None:
+            st.subheader("Saved Artifact Details")
+            st.write(f"Experiment ID: {artifact.experiment_id}")
+            st.write(f"Report Path: {artifact.report_path}")
+            st.write(f"Metadata Path: {artifact.metadata_path}")

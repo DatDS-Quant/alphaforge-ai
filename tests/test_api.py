@@ -140,3 +140,64 @@ def test_post_alpha_generate():
     payload_short = {"user_prompt": "ab"}
     response = client.post("/alpha/generate", json=payload_short)
     assert response.status_code == 400 or response.status_code == 422
+
+
+def test_post_report_generate_and_save(tmp_path, monkeypatch):
+    """
+    Verify report generation and saving endpoints, checking for validation errors
+    and ensuring responses are formatted correctly without NaN/inf.
+    """
+    # 1. Base input payload
+    payload = {
+        "title": "API Test Alpha",
+        "hypothesis": "Test Hypothesis",
+        "formula": "rank(momentum(close, 10))",
+        "required_columns": ["close"],
+        "expected_behavior": "Up is good",
+        "risk_notes": ["No risk notes"],
+        "explanation": "No explanation",
+        "validation": {
+            "is_valid": True,
+            "referenced_columns": ["close"],
+            "referenced_operators": [],
+        },
+        "metrics": {"total_return": 0.05, "sharpe": 1.2, "number_of_trades": 10},
+        "risk_decision": {"decision": "APPROVE", "reasons": ["Good"]},
+        "backtest_config": {"data_path": "data/sample_ohlcv.csv"},
+    }
+
+    # Test POST /report/generate
+    response = client.post("/report/generate", json=payload)
+    assert response.status_code == 200
+    res_json = response.json()
+    assert "title" in res_json
+    assert res_json["title"] == "API Test Alpha"
+    assert "## Executive Summary" in res_json["report_markdown"]
+
+    # Redirect saving to a temp directory using monkeypatch
+    temp_dir = tmp_path / "experiments_api_test"
+    import app.api.routes
+
+    original_save = app.api.routes.save_research_experiment
+
+    def mock_save(input_data):
+        return original_save(input_data, output_dir=str(temp_dir))
+
+    monkeypatch.setattr(app.api.routes, "save_research_experiment", mock_save)
+
+    # Test POST /experiments/save
+    response_save = client.post("/experiments/save", json=payload)
+    assert response_save.status_code == 200
+    res_save_json = response_save.json()
+    assert "experiment_id" in res_save_json
+    assert "report_path" in res_save_json
+
+    # Assert files are created in the temp directory
+    assert os.path.exists(res_save_json["report_path"])
+    assert os.path.exists(res_save_json["metadata_path"])
+
+    # Test Validation Error
+    payload_invalid = payload.copy()
+    del payload_invalid["formula"]  # Missing required field
+    response_err = client.post("/report/generate", json=payload_invalid)
+    assert response_err.status_code == 422
