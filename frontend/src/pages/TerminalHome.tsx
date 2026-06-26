@@ -12,6 +12,7 @@ export const TerminalHome: React.FC = () => {
     validation,
     backtestResult, setBacktestResult,
     riskReview, setRiskReview,
+    report, setReport,
     savedArtifact,
     scenario,
     days,
@@ -20,7 +21,7 @@ export const TerminalHome: React.FC = () => {
     setActiveTab,
     dataPath, signalMode, upperQuantile, lowerQuantile, transactionCost, slippage,
     loading, setLoading,
-    setError, setReport, resetAll
+    setError, resetAll
   } = useResearchStore();
 
   const handleGenerateData = async () => {
@@ -51,7 +52,7 @@ export const TerminalHome: React.FC = () => {
       const res = await apiClient.runBacktest({
         formula: alphaFormula,
         data_path: dataPath,
-        signal_mode: signalMode,
+        mode: signalMode,
         upper_quantile: upperQuantile,
         lower_quantile: lowerQuantile,
         transaction_cost: transactionCost,
@@ -204,11 +205,11 @@ export const TerminalHome: React.FC = () => {
                 <td>3</td>
                 <td>Formula Validation</td>
                 <td>
-                  <span className={`term-badge ${validation ? (validation.status === 'VALID' ? 'teal' : 'red') : 'blue'}`}>
-                    {validation ? validation.status : 'Pending'}
+                  <span className={`term-badge ${validation ? (validation.is_valid ? 'teal' : 'red') : 'blue'}`}>
+                    {validation ? (validation.is_valid ? 'VALID' : 'INVALID') : 'Pending'}
                   </span>
                 </td>
-                <td>{validation ? (validation.status === 'VALID' ? 'AST Validated' : 'Validation Errors present') : 'Verify AST sandbox constraints'}</td>
+                <td>{validation ? (validation.is_valid ? 'AST Validated' : 'Validation Errors present') : 'Verify AST sandbox constraints'}</td>
                 <td style={{ textAlign: 'right' }}>
                   <button
                     onClick={() => setActiveTab('Formula Lab')}
