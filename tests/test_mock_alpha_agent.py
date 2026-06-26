@@ -144,6 +144,8 @@ def test_dashboard_importable():
         MagicMock(),
         MagicMock(),
     )
+    streamlit_mock.sidebar.button.return_value = False
+    streamlit_mock.button.return_value = False
     streamlit_mock.session_state = {}
     sys.modules["streamlit"] = streamlit_mock
 

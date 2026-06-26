@@ -1,7 +1,7 @@
 import json
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.agents.report_schemas import ExperimentArtifact, ResearchReport, ResearchReportInput
 
@@ -38,7 +38,7 @@ def save_experiment_artifacts(
     experiment_id = create_experiment_id(input_data.title, input_data.formula)
 
     if created_at is None:
-        created_at = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        created_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     report_filename = f"{experiment_id}_report.md"
     metadata_filename = f"{experiment_id}_metadata.json"
