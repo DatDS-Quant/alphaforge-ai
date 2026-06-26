@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -42,7 +42,7 @@ class BacktestRequest(BaseModel):
     data_path: str = Field(
         default="data/sample_ohlcv.csv", description="Path to the OHLCV CSV file."
     )
-    mode: str = Field(
+    mode: Literal["long_short", "long_flat"] = Field(
         default="long_short", description="Signal generation mode: 'long_short' or 'long_flat'."
     )
     upper_quantile: float = Field(default=0.7, description="Upper threshold quantile.")
