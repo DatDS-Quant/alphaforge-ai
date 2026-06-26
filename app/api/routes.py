@@ -189,11 +189,32 @@ def evaluate_risk_endpoint(payload: RiskRequest):
     """
     try:
         risk_result = evaluate_risk(payload.metrics)
+        
+        # Calculate findings based on metrics for UI display
+        max_dd = payload.metrics.get("max_drawdown", 0.0)
+        num_trades = payload.metrics.get("number_of_trades", 0)
+        sharpe = payload.metrics.get("sharpe", 0.0)
+        turnover = payload.metrics.get("turnover", 0.0)
+        
+        max_dd_status = "FAIL" if max_dd < -0.25 else "PASS"
+        trades_status = "FAIL" if num_trades < 5 else "PASS"
+        sharpe_status = "CAUTION" if sharpe < 1.0 else "PASS"
+        turnover_status = "CAUTION" if turnover > 0.6 else "PASS"
+        
+        rule_findings = {
+            "max_drawdown": f"{max_dd_status} ({max_dd * 100:.1f}%)",
+            "number_of_trades": f"{trades_status} ({num_trades} trades)",
+            "sharpe": f"{sharpe_status} ({sharpe:.2f} Sharpe)",
+            "turnover": f"{turnover_status} ({turnover * 100:.1f}%)"
+        }
+        
         return RiskResponse(
             decision=risk_result["decision"],
             reasons=risk_result["reasons"],
             recommended_position_scale=risk_result["recommended_position_scale"],
+            recommended_scale=risk_result["recommended_position_scale"],
             disclaimer=risk_result["disclaimer"],
+            rule_findings=rule_findings,
         )
     except Exception as e:
         raise HTTPException(

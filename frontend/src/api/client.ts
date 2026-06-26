@@ -14,7 +14,7 @@ import type {
   ExperimentSaveResponse,
 } from './types';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' && window.location.port === '5173' ? 'http://127.0.0.1:8000' : '');
 
 async function request<T>(path: string, options: RequestInit): Promise<T> {
   const url = `${BASE_URL}${path}`;

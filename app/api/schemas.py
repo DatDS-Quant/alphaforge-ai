@@ -65,8 +65,17 @@ class RiskRequest(BaseModel):
     metrics: Dict[str, Any] = Field(..., description="Metrics dictionary from backtest execution.")
 
 
+class RuleFindings(BaseModel):
+    max_drawdown: str
+    number_of_trades: str
+    sharpe: str
+    turnover: str
+
+
 class RiskResponse(BaseModel):
     decision: str = Field(..., description="APPROVE, REDUCE, or REJECT.")
     reasons: List[str]
     recommended_position_scale: float
+    recommended_scale: float = Field(..., description="Same as recommended_position_scale for frontend compatibility.")
     disclaimer: str
+    rule_findings: RuleFindings
