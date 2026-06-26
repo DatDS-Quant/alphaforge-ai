@@ -20,6 +20,10 @@ def calculate_performance_metrics(df: pd.DataFrame) -> Dict[str, Any]:
         "profit_factor": 0.0,
         "turnover": 0.0,
         "number_of_trades": 0,
+        "buy_hold_total_return": 0.0,
+        "strategy_excess_return_vs_buy_hold": 0.0,
+        "strategy_correlation_to_asset_return": 0.0,
+        "exposure_ratio": 0.0,
     }
 
     if df.empty or "strategy_return" not in df.columns:
@@ -93,6 +97,35 @@ def calculate_performance_metrics(df: pd.DataFrame) -> Dict[str, Any]:
         metrics["number_of_trades"] = int((df["trade"] != 0.0).sum())
     else:
         metrics["number_of_trades"] = 0
+
+    # 10. Benchmark Metrics
+    # Buy & Hold Total Return
+    bh_total = 0.0
+    if "buy_hold_equity_curve" in df.columns and len(df["buy_hold_equity_curve"]) > 0:
+        bh_total = float(df["buy_hold_equity_curve"].iloc[-1] - 1.0)
+    elif "return" in df.columns and len(df) > 0:
+        bh_total = float((1.0 + df["return"]).prod() - 1.0)
+    metrics["buy_hold_total_return"] = bh_total
+
+    # Excess Return vs Buy & Hold
+    metrics["strategy_excess_return_vs_buy_hold"] = float(metrics["total_return"] - bh_total)
+
+    # Strategy Correlation to Asset Return
+    corr = 0.0
+    if "strategy_return" in df.columns and "return" in df.columns:
+        std1 = df["strategy_return"].std()
+        std2 = df["return"].std()
+        if std1 > 0.0 and std2 > 0.0:
+            corr_val = df["strategy_return"].corr(df["return"])
+            if not pd.isna(corr_val):
+                corr = float(corr_val)
+    metrics["strategy_correlation_to_asset_return"] = corr
+
+    # Exposure Ratio
+    exposure = 0.0
+    if "signal" in df.columns and len(df) > 0:
+        exposure = float((df["signal"].abs() > 0.0).sum() / len(df))
+    metrics["exposure_ratio"] = exposure
 
     # Final safety check to replace any invalid float value with 0.0
     for key, val in metrics.items():

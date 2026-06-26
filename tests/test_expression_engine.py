@@ -12,6 +12,7 @@ def test_validator_safe_formulas():
         "rank(momentum(close, 20))",
         "zscore(volume, 60) * rank(momentum(close, 20))",
         "-zscore(close, 20)",
+        "ts_mean(close, 10) - delay(close, 10)",
         "ts_mean(close, 10) + ts_std(volume, 20)",
         "delay(close, 5) * 1.5",
     ]
@@ -26,20 +27,23 @@ def test_validator_unsafe_formulas():
     attribute access, subscript access, or dynamic functions.
     """
     unsafe_formulas = [
-        "import os",
+        "__import__('os').system('echo bad')",
+        "**import**('os').system('echo bad')",
+        "open('file.txt')",
         "close.__class__",
         "close[0]",
         "lambda x: x",
         "[x for x in close]",
-        "eval('close')",
-        "exec('close')",
-        "open('file.txt')",
+        "globals()",
+        "locals()",
+        "eval('1+1')",
+        "ts_mean(close, -5)",
+        "ts_mean(close, 0)",
+        "unknown_operator(close, 10)",
+        "ts_mean(unknown_column, 10)",
         "close.value",
         "close = 1",
         "__builtins__",
-        "globals()",
-        "locals()",
-        "unknown_function(close)",
         "close + unknown_variable",
     ]
     for formula in unsafe_formulas:

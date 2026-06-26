@@ -38,6 +38,7 @@ data/*.csv
 !data/.gitkeep
 reports/*.pdf
 reports/*.csv
+reports/experiments/
 !reports/.gitkeep
 
 # IDEs

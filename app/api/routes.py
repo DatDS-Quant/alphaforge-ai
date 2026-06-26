@@ -2,6 +2,10 @@ import os
 
 from fastapi import APIRouter, HTTPException, status
 
+from app.agents.report_schemas import ExperimentArtifact, ResearchReport, ResearchReportInput
+from app.agents.report_service import generate_research_report, save_research_experiment
+from app.agents.schemas import AlphaIdeaRequest, AlphaIdeaResponse
+from app.agents.service import generate_and_validate_alpha_idea
 from app.api.schemas import (
     BacktestRequest,
     BacktestResponse,
@@ -43,7 +47,7 @@ def generate_data(payload: GenerateDataRequest):
         if output_dir:
             os.makedirs(output_dir, exist_ok=True)
 
-        df = generate_sample_data(days=payload.days, seed=payload.seed)
+        df = generate_sample_data(days=payload.days, seed=payload.seed, scenario=payload.scenario)
         df.to_csv(payload.output_path, index=False)
 
         return GenerateDataResponse(
@@ -185,13 +189,85 @@ def evaluate_risk_endpoint(payload: RiskRequest):
     """
     try:
         risk_result = evaluate_risk(payload.metrics)
+        
+        # Calculate findings based on metrics for UI display
+        max_dd = payload.metrics.get("max_drawdown", 0.0)
+        num_trades = payload.metrics.get("number_of_trades", 0)
+        sharpe = payload.metrics.get("sharpe", 0.0)
+        turnover = payload.metrics.get("turnover", 0.0)
+        
+        max_dd_status = "FAIL" if max_dd < -0.25 else "PASS"
+        trades_status = "FAIL" if num_trades < 5 else "PASS"
+        sharpe_status = "CAUTION" if sharpe < 1.0 else "PASS"
+        turnover_status = "CAUTION" if turnover > 0.6 else "PASS"
+        
+        rule_findings = {
+            "max_drawdown": f"{max_dd_status} ({max_dd * 100:.1f}%)",
+            "number_of_trades": f"{trades_status} ({num_trades} trades)",
+            "sharpe": f"{sharpe_status} ({sharpe:.2f} Sharpe)",
+            "turnover": f"{turnover_status} ({turnover * 100:.1f}%)"
+        }
+        
         return RiskResponse(
             decision=risk_result["decision"],
             reasons=risk_result["reasons"],
             recommended_position_scale=risk_result["recommended_position_scale"],
+            recommended_scale=risk_result["recommended_position_scale"],
             disclaimer=risk_result["disclaimer"],
+            rule_findings=rule_findings,
         )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error evaluating risk rules: {str(e)}"
+        ) from e
+
+
+@router.post("/alpha/generate", response_model=AlphaIdeaResponse)
+def generate_alpha_idea_endpoint(payload: AlphaIdeaRequest):
+    """
+    Generate and validate a quantitative alpha idea from a natural-language prompt.
+    """
+    if len(payload.user_prompt.strip()) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User prompt is too short. Minimum length is 3 characters.",
+        )
+    try:
+        result = generate_and_validate_alpha_idea(
+            user_prompt=payload.user_prompt,
+            preferred_style=payload.preferred_style or "balanced",
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating alpha idea: {str(e)}",
+        ) from e
+
+
+@router.post("/report/generate", response_model=ResearchReport)
+def generate_report_endpoint(payload: ResearchReportInput):
+    """
+    Generate a quantitative alpha research report.
+    """
+    try:
+        return generate_research_report(payload)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate report: {str(e)}",
+        ) from e
+
+
+@router.post("/experiments/save", response_model=ExperimentArtifact)
+def save_experiment_endpoint(payload: ResearchReportInput):
+    """
+    Save the research report and metadata as local experiment artifacts.
+    """
+    try:
+        return save_research_experiment(payload)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save experiment: {str(e)}",
         ) from e

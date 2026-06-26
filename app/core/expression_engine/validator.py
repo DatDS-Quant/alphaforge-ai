@@ -16,6 +16,23 @@ ALLOWED_COLUMNS = {"open", "high", "low", "close", "volume", "return"}
 ALLOWED_OPERATORS = {"ts_mean", "ts_std", "ts_rank", "zscore", "momentum", "delta", "delay", "rank"}
 
 
+def _extract_static_int(node) -> int | None:
+    """
+    Extract a static integer value from an AST node if it represents an integer constant or unary operation on one.
+    """
+    if isinstance(node, ast.Constant):
+        if isinstance(node.value, int):
+            return node.value
+    elif isinstance(node, ast.UnaryOp):
+        if isinstance(node.op, ast.USub):
+            operand_val = _extract_static_int(node.operand)
+            if operand_val is not None:
+                return -operand_val
+        elif isinstance(node.op, ast.UAdd):
+            return _extract_static_int(node.operand)
+    return None
+
+
 class ASTValidator(ast.NodeVisitor):
     def __init__(self):
         self.errors = []
@@ -45,6 +62,22 @@ class ASTValidator(ast.NodeVisitor):
             func_name = node.func.id
             if func_name in ALLOWED_OPERATORS:
                 self.referenced_operators.add(func_name)
+                # Statically check operator arguments
+                if func_name != "rank":
+                    if len(node.args) != 2:
+                        self.errors.append(
+                            f"Operator {func_name} expects exactly 2 arguments, got {len(node.args)}"
+                        )
+                    else:
+                        window_val = _extract_static_int(node.args[1])
+                        if window_val is None:
+                            self.errors.append(
+                                f"Window size for {func_name} must be a static positive integer"
+                            )
+                        elif window_val <= 0:
+                            self.errors.append(
+                                f"Window size for {func_name} must be greater than zero, got {window_val}"
+                            )
             else:
                 self.errors.append(f"Forbidden or unknown function call: {func_name}")
         else:

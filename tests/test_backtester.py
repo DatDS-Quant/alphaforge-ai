@@ -68,3 +68,42 @@ def test_backtester_avoid_lookahead_shift():
 
     # At index 2: signal[1] is 1, so strategy_return[2] should be 1.0 * return[2] = -0.25
     assert pytest.approx(res["strategy_return"].iloc[2]) == -0.25
+
+
+def test_future_extreme_value_does_not_affect_earlier_signals():
+    """
+    Verify that an extreme outlier in the future does not affect signals in the past.
+    This ensures no lookahead bias is present in the threshold/quantile logic.
+    """
+    # 50 periods of steady values, then index 50 is normal, and remaining 10 are normal
+    alpha_base = pd.Series([1.0] * 50 + [2.0] + [1.0] * 10)
+    alpha_leak = pd.Series(
+        [1.0] * 50 + [2.0] + [1.0] * 9 + [1000000.0]
+    )  # Extreme outlier at the end (index 60)
+
+    sig_base = generate_signals(
+        alpha_base, mode="long_short", upper_quantile=0.7, lower_quantile=0.3, min_periods=10
+    )
+    sig_leak = generate_signals(
+        alpha_leak, mode="long_short", upper_quantile=0.7, lower_quantile=0.3, min_periods=10
+    )
+
+    # Compare signals for the first 55 bars - they must be identical
+    pd.testing.assert_series_equal(sig_base.iloc[:55], sig_leak.iloc[:55])
+
+
+def test_rank_no_future_leakage():
+    """
+    Verify that the rank operator (rolling window based) does not leak future information to earlier ranks.
+    """
+    from app.core.expression_engine.operators import rank
+
+    series_base = pd.Series([float(i % 10) for i in range(300)])
+    series_changed = series_base.copy()
+    series_changed.iloc[299] = 9999.0  # Change a future value
+
+    rank_base = rank(series_base)
+    rank_changed = rank(series_changed)
+
+    # Values prior to index 299 must be completely unaffected
+    pd.testing.assert_series_equal(rank_base.iloc[:298], rank_changed.iloc[:298])
