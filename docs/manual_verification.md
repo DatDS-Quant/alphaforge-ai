@@ -112,3 +112,49 @@ You can verify and view saved artifacts on the filesystem:
   uvicorn app.main:app --port 8080 --reload
   And ensure the API calls or environment values match the new port.
 
+## Running Demo Scenarios
+
+The synthetic scenario selector in the Streamlit sidebar (Data Settings section) allows you to simulate different pricing regimes. You can also generate these via the command line:
+
+```bash
+# Generate a bullish trend path:
+python -m app.data.sample_generator --scenario trend_up --days 1000 --seed 42
+
+# Generate a bearish trend path:
+python -m app.data.sample_generator --scenario trend_down --days 1000 --seed 42
+
+# Generate a mean-reverting price path:
+python -m app.data.sample_generator --scenario mean_reverting --days 1000 --seed 42
+
+# Generate a highly volatile path:
+python -m app.data.sample_generator --scenario volatile --days 1000 --seed 42
+```
+
+> [!NOTE]
+> All scenarios are fully synthetic and deterministic. They are used for testing pipeline mechanics under different simulated conditions, and do not represent real-market dynamics or guarantee future strategy profitability.
+
+## Recommended Demo Path for Recruiters / Reviewers
+
+To showcase the complete research lifecycle (including risk management limits, approvals, and report generation), follow this recommended path in the Streamlit dashboard:
+
+1. **Step 1: Risk Rejection Demonstration**
+   - In the sidebar under **Data Settings**, set **Synthetic Scenario** to `random_walk` or `volatile` and click **Generate Sample Data**.
+   - Go to the **AI Alpha Research Desk** and enter a prompt: "Find a momentum alpha".
+   - Click **Generate Alpha Idea**.
+   - Go to the **Backtest Lab** and click **Run Backtest**.
+   - Review the results. If the strategy suffers from severe drawdowns (e.g. drawdown exceeds -25%) or lacks sufficient trade volume under these market conditions, navigate to the **Risk Review** tab. The status panel at the top will indicate **Backtest completed. Risk decision: REJECT.** (or REDUCE).
+   - In **Research Report**, click **Generate Research Report** to see the suggested action: "Do not promote this strategy. Investigate risk drivers, reduce turnover, and run robustness tests."
+
+2. **Step 2: Strategy Sizing / Approval Demonstration**
+   - In the sidebar under **Data Settings**, change **Synthetic Scenario** to `trend_up`. Click **Generate Sample Data**. (A strong positive drift is highly favorable to momentum signals).
+   - Navigate to the **Backtest Lab** and click **Run Backtest**.
+   - The strategy return should be significantly improved. Navigate to the **Risk Review** tab. The status panel at the top will show **Backtest completed. Risk decision: APPROVE.** or **REDUCE.**.
+   - Review the metrics table which compares the strategy returns with the baseline buy-and-hold benchmark return.
+
+3. **Step 3: Generate and Save Experiment Artifacts**
+   - Navigate to the **Research Report** tab.
+   - Click **Generate Research Report**. Notice that the report begins with a clear **Research Verdict** outlining the decision, primary reason, total return, Sharpe, max drawdown, and suggested action, followed by the "Full Research Memo" expander.
+   - Click **Save Experiment Artifacts**.
+   - Verify the generated Markdown and JSON files are stored in the `reports/experiments/` folder.
+
+

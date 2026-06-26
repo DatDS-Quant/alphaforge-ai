@@ -124,11 +124,41 @@ AI Alpha Research Desk -> Backtest Lab -> Risk Review -> Research Report -> Save
 3. Risk Review: Access the post-backtest checklist to check the APPROVE, REDUCE, or REJECT status.
 4. Research Report: Click 'Generate Research Report' to compile the quantitative memo. Click 'Save Experiment Artifacts' to save the report and metadata files locally.
 
+## Benchmark Comparison
+
+The backtest execution now calculates a baseline buy-and-hold equity curve alongside the strategy returns.
+- buy_hold_total_return: Cumulative return of the underlying asset over the backtest period.
+- strategy_excess_return_vs_buy_hold: Total strategy return minus buy-and-hold return.
+- strategy_correlation_to_asset_return: Safe correlation coefficient between daily strategy returns and asset returns.
+- exposure_ratio: Fraction of total days where the strategy holds an active position (absolute signal > 0).
+
+## Synthetic Scenario Selector
+
+You can generate synthetic price paths using five distinct simulation modes in the Data Settings expander:
+- random_walk: Default geometric random walk.
+- trend_up: Random walk with a positive drift.
+- trend_down: Random walk with a negative drift.
+- mean_reverting: Simulates Ornstein-Uhlenbeck-like mean reverting behavior.
+- volatile: Higher volatility path.
+
+All scenarios are generated deterministically using the specified seed.
+
+## Agent Trace Logs
+
+When generating an idea, the AI Desk provides an Agent Trace logs panel summarizing the classified theme, formula template selected, AST validation status, and warnings. This details how the mock LLM mapped intent to mathematical code offline.
+
+## System Limitations & Scope
+
+- Single-Asset Time-Series Signals: Current formula evaluations produce single-asset time-series signals based on local threshold quantiles. It is not a multi-asset cross-sectional alpha rank engine.
+- Flat File Storage: Experiments are saved locally as Markdown and JSON files. A central database index is not yet implemented.
+- Vectorized Assumptions: Zero execution lag, zero borrow costs, and vectorized executions are assumed.
+
 ## Roadmap
 
 - Phase 2: Add SQLAlchemy database layer and local SQLite support. (Planned)
 - Phase 3: Integrate offline, local mock LLM agents for natural language to formula translation. (Completed)
 - Phase 4: Implement Research Report Agent and lightweight file-based experiment artifact saving. (Completed)
+- Phase 5A: Add dashboard UX polish, benchmark metrics, and synthetic scenarios. (Completed)
 
 ## Disclaimer
 

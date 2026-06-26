@@ -11,6 +11,7 @@ class GenerateDataRequest(BaseModel):
     days: int = Field(default=1000, description="Number of daily candles to generate.")
     seed: int = Field(default=42, description="Random seed for reproducibility.")
     output_path: str = Field(default="data/sample_ohlcv.csv", description="Output CSV file path.")
+    scenario: str = Field(default="random_walk", description="Price path simulation scenario.")
 
 
 class GenerateDataResponse(BaseModel):

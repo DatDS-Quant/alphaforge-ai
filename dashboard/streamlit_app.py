@@ -68,32 +68,37 @@ if "saved_artifact" not in st.session_state:
 # Sidebar parameters
 st.sidebar.title("AlphaForge AI Configuration")
 
-st.sidebar.subheader("Data Generation Settings")
-days = st.sidebar.number_input(
-    "Days to Generate", min_value=10, max_value=5000, value=default_days, step=100
-)
-seed = st.sidebar.number_input(
-    "Random Seed", min_value=0, max_value=100000, value=default_seed, step=1
-)
-data_path = st.sidebar.text_input("Data File Path", value=default_path)
+with st.sidebar.expander("Data Settings", expanded=True):
+    days = st.number_input(
+        "Days to Generate", min_value=10, max_value=5000, value=default_days, step=100
+    )
+    seed = st.number_input("Random Seed", min_value=0, max_value=100000, value=default_seed, step=1)
+    scenario = st.selectbox(
+        "Synthetic Scenario",
+        ["random_walk", "trend_up", "trend_down", "mean_reverting", "volatile"],
+        index=0,
+    )
+    data_path = st.text_input("Data File Path", value=default_path)
 
-st.sidebar.subheader("Alpha & Backtest Settings")
-formula = st.sidebar.text_input("Alpha Formula", value=st.session_state["generated_formula"])
-signal_mode = st.sidebar.selectbox(
-    "Signal Mode", ["long_short", "long_flat"], index=0 if default_mode == "long_short" else 1
-)
-upper_q = st.sidebar.slider(
-    "Upper Quantile Threshold", min_value=0.5, max_value=1.0, value=default_upper, step=0.05
-)
-lower_q = st.sidebar.slider(
-    "Lower Quantile Threshold", min_value=0.0, max_value=0.5, value=default_lower, step=0.05
-)
-transaction_cost = st.sidebar.number_input(
-    "Transaction Cost Rate", min_value=0.0, max_value=0.05, value=default_cost, format="%.6f"
-)
-slippage = st.sidebar.number_input(
-    "Slippage Rate", min_value=0.0, max_value=0.05, value=default_slippage, format="%.6f"
-)
+with st.sidebar.expander("Alpha and Signal Settings", expanded=True):
+    formula = st.text_area("Alpha Formula", value=st.session_state["generated_formula"], height=100)
+    signal_mode = st.selectbox(
+        "Signal Mode", ["long_short", "long_flat"], index=0 if default_mode == "long_short" else 1
+    )
+    upper_q = st.slider(
+        "Upper Quantile Threshold", min_value=0.5, max_value=1.0, value=default_upper, step=0.05
+    )
+    lower_q = st.slider(
+        "Lower Quantile Threshold", min_value=0.0, max_value=0.5, value=default_lower, step=0.05
+    )
+
+with st.sidebar.expander("Execution Cost Settings", expanded=True):
+    transaction_cost = st.number_input(
+        "Transaction Cost Rate", min_value=0.0, max_value=0.05, value=default_cost, format="%.6f"
+    )
+    slippage = st.number_input(
+        "Slippage Rate", min_value=0.0, max_value=0.05, value=default_slippage, format="%.6f"
+    )
 
 st.sidebar.subheader("Actions")
 btn_generate = st.sidebar.button("Generate Sample Data")
@@ -106,10 +111,10 @@ if btn_generate:
         dir_name = os.path.dirname(data_path)
         if dir_name:
             os.makedirs(dir_name, exist_ok=True)
-        df_gen = generate_sample_data(days=days, seed=seed)
+        df_gen = generate_sample_data(days=days, seed=seed, scenario=scenario)
         df_gen.to_csv(data_path, index=False)
         st.session_state["ohlcv_df"] = df_gen
-        st.sidebar.success(f"Success: Generated {len(df_gen)} rows at {data_path}")
+        st.sidebar.success(f"Success: Generated {len(df_gen)} rows ({scenario}) at {data_path}")
     except Exception as e:
         st.sidebar.error(f"Error generating data: {str(e)}")
 
@@ -126,7 +131,7 @@ if btn_backtest:
         if not os.path.exists(data_path):
             st.sidebar.warning("Data file not found. Auto-generating sample data first...")
             try:
-                df_gen = generate_sample_data(days=days, seed=seed)
+                df_gen = generate_sample_data(days=days, seed=seed, scenario=scenario)
                 os.makedirs(os.path.dirname(data_path) or ".", exist_ok=True)
                 df_gen.to_csv(data_path, index=False)
                 st.session_state["ohlcv_df"] = df_gen
@@ -161,7 +166,14 @@ if btn_backtest:
                 risk = evaluate_risk(metrics)
                 st.session_state["risk_result"] = risk
 
-                st.sidebar.success("Success: Backtest and risk checks completed")
+                # Conditional success message
+                decision = risk.get("decision", "REJECT")
+                if decision == "REJECT":
+                    st.sidebar.error("Backtest completed. Risk decision: REJECT.")
+                elif decision == "REDUCE":
+                    st.sidebar.warning("Backtest completed. Risk decision: REDUCE.")
+                else:  # APPROVE
+                    st.sidebar.success("Backtest completed. Risk decision: APPROVE.")
             except Exception as e:
                 st.sidebar.error(f"Backtest failed: {str(e)}")
 
@@ -183,6 +195,36 @@ if btn_risk:
 # Main Dashboard View
 st.title("AlphaForge AI Quant Research Platform")
 st.text("Quant Research, Backtesting, and Risk Management Interface")
+
+# Compact Workflow Status Panel
+st.write("")
+st.write("**Workflow Status Panel**")
+col_s1, col_s2, col_s3, col_s4, col_s5, col_s6 = st.columns(6)
+
+idea_status = "Generated" if st.session_state.get("generated_idea") is not None else "Empty"
+data_status = "Available" if st.session_state.get("ohlcv_df") is not None else "Not Generated"
+backtest_status = "Completed" if st.session_state.get("backtest_df") is not None else "Pending"
+risk_status = (
+    st.session_state["risk_result"]["decision"]
+    if st.session_state.get("risk_result") is not None
+    else "Pending"
+)
+report_status = "Generated" if st.session_state.get("generated_report") is not None else "Pending"
+artifact_status = "Saved" if st.session_state.get("saved_artifact") is not None else "Not Saved"
+
+with col_s1:
+    st.write(f"Alpha Idea: **{idea_status}**")
+with col_s2:
+    st.write(f"Data Path: **{data_status}**")
+with col_s3:
+    st.write(f"Backtest: **{backtest_status}**")
+with col_s4:
+    st.write(f"Risk Decision: **{risk_status}**")
+with col_s5:
+    st.write(f"Report: **{report_status}**")
+with col_s6:
+    st.write(f"Artifact: **{artifact_status}**")
+st.write("---")
 
 # Tabs definition - standard ASCII names, no emojis
 tab_ai, tab_formula, tab_backtest, tab_risk, tab_report = st.tabs(
@@ -268,6 +310,17 @@ with tab_ai:
             for wrn in idea_res.warnings:
                 st.write(f"- {wrn}")
 
+        # Agent Trace Panel
+        st.write("")
+        st.write("**Agent Trace Logs**")
+        st.write(f"- Detected Theme: **{idea_res.trace.detected_theme}**")
+        st.write(f"- Formula Template Selected: **{idea_res.trace.formula_template}**")
+        st.write(f"- Validation Status: **{idea_res.trace.validation_status}**")
+        if idea_res.trace.warnings:
+            st.write("- Warnings/Logs:")
+            for wrn in idea_res.trace.warnings:
+                st.write(f"  - {wrn}")
+
 # 1. Formula Tab
 with tab_formula:
     st.header("Alpha Expression Validator")
@@ -313,6 +366,10 @@ with tab_backtest:
             "Profit Factor": f"{metrics['profit_factor']:.2f}",
             "Turnover": f"{metrics['turnover']:.4f}",
             "Number of Trades": int(metrics["number_of_trades"]),
+            "Buy & Hold Total Return": f"{metrics.get('buy_hold_total_return', 0.0) * 100:.2f}%",
+            "Strategy Excess Return vs Benchmark": f"{metrics.get('strategy_excess_return_vs_buy_hold', 0.0) * 100:.2f}%",
+            "Strategy Correlation to Asset": f"{metrics.get('strategy_correlation_to_asset_return', 0.0):.4f}",
+            "Exposure Ratio": f"{metrics.get('exposure_ratio', 0.0) * 100:.2f}%",
         }
 
         col_metrics, col_info = st.columns([1, 2])
@@ -326,11 +383,12 @@ with tab_backtest:
             if len(bt_df) > 0:
                 st.write(f"Start Date: {bt_df['date'].iloc[0].strftime('%Y-%m-%d')}")
                 st.write(f"End Date: {bt_df['date'].iloc[-1].strftime('%Y-%m-%d')}")
+            st.text("Note: Benchmark comparison uses the same synthetic single-asset price path.")
 
         # Line charts
         st.subheader("Equity Curve")
         chart_df = bt_df.set_index("date")
-        st.line_chart(chart_df["equity_curve"])
+        st.line_chart(chart_df[["equity_curve", "buy_hold_equity_curve"]])
 
         st.subheader("Drawdown Profile")
         st.line_chart(chart_df["drawdown"])
@@ -360,14 +418,15 @@ with tab_risk:
     if st.session_state["risk_result"] is not None:
         risk = st.session_state["risk_result"]
 
-        st.subheader(f"Risk Decision: {risk['decision']}")
+        st.write(f"**Risk Decision: {risk['decision']}**")
         st.write(f"Recommended Position Scale: {risk['recommended_position_scale']}")
 
-        st.subheader("Rule Findings")
+        st.write("**Rule Findings**")
         for reason in risk["reasons"]:
             st.write(f"- {reason}")
 
-        st.subheader("Disclaimer")
+        st.write("")
+        st.write("**Disclaimer**")
         st.text(risk["disclaimer"])
     else:
         st.info(
@@ -474,16 +533,44 @@ with tab_report:
                     except Exception as e:
                         st.error(f"Failed to save experiment: {str(e)}")
 
-        # If report exists, display it
+        # If report exists, display Research Verdict and full report expander
         report = st.session_state.get("generated_report")
         if report is not None:
-            st.subheader("Report Content")
-            st.markdown(report.report_markdown)
+            decision = report_input.risk_decision.get("decision", "REJECT")
+            reasons = report_input.risk_decision.get("reasons", [])
+            top_reason = reasons[0] if reasons else "Passed basic checks."
+            total_return = report_input.metrics.get("total_return", 0.0)
+            sharpe = report_input.metrics.get("sharpe", 0.0)
+            max_drawdown = report_input.metrics.get("max_drawdown", 0.0)
+
+            # Map suggested action
+            if decision == "REJECT":
+                suggested_action = "Do not promote this strategy. Investigate risk drivers, reduce turnover, and run robustness tests."
+            elif decision == "REDUCE":
+                suggested_action = (
+                    "Use reduced sizing only under simplified assumptions and run robustness tests."
+                )
+            else:  # APPROVE
+                suggested_action = "Approved only under simplified synthetic and vectorized assumptions. Validate further before any real-world use."
+
+            st.write("")
+            st.write("**Research Verdict**")
+            st.write(f"- Decision: **{decision}**")
+            st.write(f"- Top Reason: **{top_reason}**")
+            st.write(f"- Total Return: **{total_return * 100:.2f}%**")
+            st.write(f"- Sharpe: **{sharpe:.2f}**")
+            st.write(f"- Max Drawdown: **{max_drawdown * 100:.2f}%**")
+            st.write(f"- Suggested Action: **{suggested_action}**")
+            st.write("")
+
+            with st.expander("Full Research Memo", expanded=False):
+                st.markdown(report.report_markdown)
 
         # If artifact exists, display paths
         artifact = st.session_state.get("saved_artifact")
         if artifact is not None:
-            st.subheader("Saved Artifact Details")
-            st.write(f"Experiment ID: {artifact.experiment_id}")
-            st.write(f"Report Path: {artifact.report_path}")
-            st.write(f"Metadata Path: {artifact.metadata_path}")
+            st.write("")
+            st.write("**Saved Artifact Details**")
+            st.write(f"- Experiment ID: **{artifact.experiment_id}**")
+            st.write(f"- Report Path: **{artifact.report_path}**")
+            st.write(f"- Metadata Path: **{artifact.metadata_path}**")

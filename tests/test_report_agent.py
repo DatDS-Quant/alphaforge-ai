@@ -172,3 +172,58 @@ def test_report_reduce_caution():
     assert "Status: REDUCE" in report.report_markdown
     assert "scale factor: 0.5" in report.report_markdown
     assert "Turnover is slightly elevated." in report.report_markdown
+
+
+def test_report_verdict_order():
+    """
+    Verify that Research Verdict section appears before Executive Summary.
+    """
+    agent = ResearchReportAgent()
+    input_data = get_base_input()
+    report = agent.generate_report(input_data)
+    markdown = report.report_markdown
+
+    verdict_idx = markdown.find("## Research Verdict")
+    exec_idx = markdown.find("## Executive Summary")
+
+    assert verdict_idx != -1
+    assert exec_idx != -1
+    assert verdict_idx < exec_idx
+
+
+def test_report_rejected_suggested_action():
+    """
+    Verify rejected report includes the correct suggested action.
+    """
+    agent = ResearchReportAgent()
+    input_data = get_base_input()
+    input_data.risk_decision = {
+        "decision": "REJECT",
+        "reasons": ["High Drawdown"],
+        "recommended_position_scale": 0.0,
+        "disclaimer": "This is not investment advice.",
+    }
+    report = agent.generate_report(input_data)
+    assert "Do not promote this strategy. Investigate risk drivers" in report.report_markdown
+
+
+def test_report_line_separations():
+    """
+    Verify required columns and expected behavior are cleanly separated on different lines.
+    """
+    agent = ResearchReportAgent()
+    input_data = get_base_input()
+    report = agent.generate_report(input_data)
+    markdown = report.report_markdown
+
+    assert "- **Required columns**:" in markdown
+    assert "- **Expected behavior**:" in markdown
+
+    # Check that they are not on the same line (separated by newline)
+    lines = markdown.split("\n")
+    cols_line = [line for line in lines if "Required columns" in line]
+    behavior_line = [line for line in lines if "Expected behavior" in line]
+
+    assert cols_line
+    assert behavior_line
+    assert cols_line[0] != behavior_line[0]

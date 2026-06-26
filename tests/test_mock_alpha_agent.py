@@ -137,6 +137,8 @@ def test_dashboard_importable():
     streamlit_mock.sidebar.number_input.return_value = 42
     streamlit_mock.sidebar.selectbox.return_value = "long_short"
     streamlit_mock.sidebar.slider.return_value = 0.5
+    streamlit_mock.text_area.return_value = "rank(momentum(close, 20))"
+    streamlit_mock.sidebar.text_area.return_value = "rank(momentum(close, 20))"
     streamlit_mock.tabs.return_value = (
         MagicMock(),
         MagicMock(),
@@ -146,6 +148,14 @@ def test_dashboard_importable():
     )
     streamlit_mock.sidebar.button.return_value = False
     streamlit_mock.button.return_value = False
+    streamlit_mock.columns.return_value = (
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+        MagicMock(),
+    )
     streamlit_mock.session_state = {}
     sys.modules["streamlit"] = streamlit_mock
 
@@ -196,3 +206,31 @@ def test_agent_style_edge_cases():
     idea = agent.generate_alpha_idea("momentum", preferred_style="")
     # Should compile without style suffix
     assert not idea.explanation.endswith(")")
+
+
+def test_agent_trace_logs():
+    """
+    Verify volume prompt classifies theme and generates detailed trace log fields.
+    """
+    from app.agents.service import generate_and_validate_alpha_idea
+
+    response = generate_and_validate_alpha_idea("abnormal volume momentum breakout")
+
+    # 1. Check theme classification
+    assert response.trace.detected_theme == "volume_confirmation"
+
+    # 2. Check trace fields
+    assert response.trace.formula_template == "zscore(volume, 60) * rank(momentum(close, 20))"
+    assert response.trace.validation_status == "VALID"
+    assert len(response.trace.warnings) >= 2
+
+    # 3. Check for absence of icons/emojis in trace
+    import re
+
+    emoji_pattern = re.compile(
+        "[" "\U00010000-\U0010ffff" "\u2600-\u27bf" "\u2000-\u32ff" "]", flags=re.UNICODE
+    )
+    assert not emoji_pattern.search(response.trace.detected_theme)
+    assert not emoji_pattern.search(response.trace.formula_template)
+    for w in response.trace.warnings:
+        assert not emoji_pattern.search(w)

@@ -1,5 +1,5 @@
 from app.agents.mock_alpha_agent import MockAlphaAgent
-from app.agents.schemas import AlphaIdeaResponse
+from app.agents.schemas import AgentTrace, AlphaIdeaResponse
 from app.core.expression_engine.validator import validate_expression
 
 
@@ -26,4 +26,12 @@ def generate_and_validate_alpha_idea(
     if validation.warnings:
         warnings.extend(validation.warnings)
 
-    return AlphaIdeaResponse(idea=idea, validation=validation, warnings=warnings)
+    theme = agent.classify_theme(user_prompt)
+    trace = AgentTrace(
+        detected_theme=theme,
+        formula_template=idea.formula,
+        validation_status="VALID" if validation.is_valid else "INVALID",
+        warnings=warnings,
+    )
+
+    return AlphaIdeaResponse(idea=idea, validation=validation, warnings=warnings, trace=trace)

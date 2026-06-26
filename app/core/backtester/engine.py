@@ -50,6 +50,9 @@ def run_backtest(
     # Equity curve starting at 1.0
     results["equity_curve"] = (1.0 + results["strategy_return"]).cumprod()
 
+    # Benchmark: buy and hold equity curve
+    results["buy_hold_equity_curve"] = (1.0 + results["return"]).cumprod()
+
     # Drawdown calculation
     cum_max = results["equity_curve"].cummax()
     results["drawdown"] = (results["equity_curve"] - cum_max) / cum_max
@@ -59,7 +62,7 @@ def run_backtest(
 
     # Clean up intermediate columns not requested in deliverables if necessary,
     # but keeping 'position' is helpful. Deliverables request:
-    # date, close, return, alpha, signal, strategy_return, equity_curve, drawdown, trade
+    # date, close, return, alpha, signal, strategy_return, equity_curve, drawdown, trade, buy_hold_equity_curve
     requested_cols = [
         "date",
         "close",
@@ -70,5 +73,6 @@ def run_backtest(
         "equity_curve",
         "drawdown",
         "trade",
+        "buy_hold_equity_curve",
     ]
     return results[requested_cols]

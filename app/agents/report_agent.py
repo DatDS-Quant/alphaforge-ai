@@ -17,9 +17,13 @@ class ResearchReportAgent:
         decision = input_data.risk_decision.get("decision", "REJECT")
         reasons = input_data.risk_decision.get("reasons", [])
         reasons_str = "\n".join([f"- {r}" for r in reasons])
+        primary_reason = reasons[0] if reasons else "Passed basic checks."
 
-        # Formatting post-backtest risk decision text
         if decision == "REJECT":
+            suggested_action = (
+                "Do not promote this strategy. Investigate risk drivers, "
+                "reduce turnover, and run robustness tests."
+            )
             risk_review_text = (
                 f"Status: REJECT\n"
                 f"The strategy was rejected due to risk threshold breaches. "
@@ -27,6 +31,9 @@ class ResearchReportAgent:
                 f"and modifications.\n\nReasons for rejection:\n{reasons_str}"
             )
         elif decision == "REDUCE":
+            suggested_action = (
+                "Use reduced sizing only under simplified assumptions and " "run robustness tests."
+            )
             scale = input_data.risk_decision.get("recommended_position_scale", 0.5)
             risk_review_text = (
                 f"Status: REDUCE\n"
@@ -34,13 +41,19 @@ class ResearchReportAgent:
                 f"Caution is required because of specific parameter constraints, such as elevated turnover "
                 f"or low risk-adjusted return.\n\nReasons for reduction:\n{reasons_str}"
             )
-        else:
+        else:  # APPROVE
+            suggested_action = (
+                "Approved only under simplified synthetic and vectorized assumptions. "
+                "Validate further before any real-world use."
+            )
             risk_review_text = (
                 f"Status: APPROVE\n"
                 f"The strategy has passed the basic risk filters. However, please note that this approval "
                 f"is strictly within the boundaries of simplified research assumptions (vectorized execution, "
                 f"daily bars, and no friction model). All parameters must be continually validated.\n\nFindings:\n{reasons_str}"
             )
+
+        scope = "Local Vectorized Quantitative Simulation Research"
 
         # Performance summary formatting
         metrics = input_data.metrics
@@ -73,6 +86,12 @@ class ResearchReportAgent:
         # Main markdown text generation
         markdown_content = f"""# Research Memo: {input_data.title}
 
+## Research Verdict
+- **Decision**: {decision}
+- **Primary Reason**: {primary_reason}
+- **Suggested Action**: {suggested_action}
+- **Scope**: {scope}
+
 ## Executive Summary
 This report analyzes the quantitative backtest performance and risk profile of the formula expression `{input_data.formula}`. The evaluation is conducted entirely locally under deterministic conditions.
 
@@ -83,21 +102,21 @@ This report analyzes the quantitative backtest performance and risk profile of t
 `{input_data.formula}`
 
 ## Required Data
-Required columns: {", ".join(input_data.required_columns)}
-Expected behavior: {input_data.expected_behavior}
+- **Required columns**: {", ".join(input_data.required_columns)}
+- **Expected behavior**: {input_data.expected_behavior}
 
 ## Validation Result
-Valid: {input_data.validation.get("is_valid", False)}
-Referenced columns: {", ".join(input_data.validation.get("referenced_columns", []))}
-Referenced operators: {", ".join(input_data.validation.get("referenced_operators", []))}
+- **Valid**: {input_data.validation.get("is_valid", False)}
+- **Referenced columns**: {", ".join(input_data.validation.get("referenced_columns", []))}
+- **Referenced operators**: {", ".join(input_data.validation.get("referenced_operators", []))}
 
 ## Backtest Configuration
-Data path: {input_data.backtest_config.get("data_path", "N/A")}
-Signal mode: {input_data.backtest_config.get("mode", "N/A")}
-Upper quantile: {input_data.backtest_config.get("upper_quantile", "N/A")}
-Lower quantile: {input_data.backtest_config.get("lower_quantile", "N/A")}
-Transaction cost rate: {input_data.backtest_config.get("transaction_cost", 0.0):.6f}
-Slippage rate: {input_data.backtest_config.get("slippage", 0.0):.6f}
+- **Data path**: {input_data.backtest_config.get("data_path", "N/A")}
+- **Signal mode**: {input_data.backtest_config.get("mode", "N/A")}
+- **Upper quantile**: {input_data.backtest_config.get("upper_quantile", "N/A")}
+- **Lower quantile**: {input_data.backtest_config.get("lower_quantile", "N/A")}
+- **Transaction cost rate**: {input_data.backtest_config.get("transaction_cost", 0.0):.6f}
+- **Slippage rate**: {input_data.backtest_config.get("slippage", 0.0):.6f}
 
 ## Performance Summary
 {perf_summary}

@@ -110,3 +110,24 @@ class MockAlphaAgent:
             explanation=explanation,
             tags=tags,
         )
+
+    def classify_theme(self, prompt: str) -> str:
+        """
+        Classify prompt text into one of the deterministic themes.
+        """
+        prompt_lower = prompt.lower()
+        vol_keywords = ["volume", "liquidity", "abnormal volume", "participation"]
+        volat_keywords = ["volatility", "stable", "risk adjusted", "noisy", "low risk"]
+        reversion_keywords = ["mean reversion", "reversal", "oversold", "overbought", "revert"]
+        mom_keywords = ["momentum", "trend", "breakout", "follow trend", "strength"]
+
+        if any(kw in prompt_lower for kw in vol_keywords):
+            return "volume_confirmation"
+        elif any(kw in prompt_lower for kw in volat_keywords):
+            return "volatility_adjusted_momentum"
+        elif any(kw in prompt_lower for kw in reversion_keywords):
+            return "mean_reversion"
+        elif any(kw in prompt_lower for kw in mom_keywords):
+            return "trend_momentum"
+        else:
+            return "default_momentum"

@@ -47,7 +47,7 @@ def generate_data(payload: GenerateDataRequest):
         if output_dir:
             os.makedirs(output_dir, exist_ok=True)
 
-        df = generate_sample_data(days=payload.days, seed=payload.seed)
+        df = generate_sample_data(days=payload.days, seed=payload.seed, scenario=payload.scenario)
         df.to_csv(payload.output_path, index=False)
 
         return GenerateDataResponse(

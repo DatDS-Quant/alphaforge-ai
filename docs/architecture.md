@@ -70,6 +70,41 @@ Provides a deterministic rule-based framework that parses user intent keywords a
 ### Research Report Agent & Artifact Store
 The Research Report Agent formats the experimental inputs, validations, metrics, and decisions into a consistent, clear Markdown document. The Artifact Store cleans out oversized arrays (like raw daily equity curves or drawdowns) and outputs the remaining structured parameters to metadata JSON and Markdown files.
 
+## Benchmark Metrics Flow
+
+To provide a quantitative credibility layer, the backtester computes strategy performance relative to a baseline buy-and-hold benchmark using the same synthetic asset price path.
+1. Return Computation: The data loader calculates daily asset returns from the price series.
+2. Benchmark Equity Curve: The backtest engine calculates the buy-and-hold returns (`buy_hold_return = asset_return`) and the cumulative buy-and-hold equity curve as the cumulative product of 1 + asset returns.
+3. Comparative Metrics: The performance metrics engine calculates benchmark metrics:
+   - `buy_hold_total_return`: Cumulative performance of the underlying asset over the backtest.
+   - `strategy_excess_return_vs_buy_hold`: Total strategy return minus buy-and-hold return.
+   - `strategy_correlation_to_asset_return`: Pearson correlation coefficient of daily strategy returns against asset returns (safely handling zero-variance scenarios by returning 0.0).
+   - `exposure_ratio`: Fraction of days where the strategy holds an active position (absolute signal > 0).
+4. Presentation: These metrics and equity curves are rendered together in the Streamlit Backtest Lab, included in the generated Research Report, and stored inside the experiment artifacts.
+
+## Synthetic Scenario Generation Modes
+
+The sample data generator supports five deterministic scenarios to test pipelines and strategy behaviors across diverse simulated market regimes without using real-world data:
+1. `random_walk`: Default geometric random walk with a minor positive drift (mean return = 0.0002, volatility = 0.015).
+2. `trend_up`: Random walk with a positive drift representing bullish conditions (mean return = 0.0015, volatility = 0.015).
+3. `trend_down`: Random walk with a negative drift representing bearish conditions (mean return = -0.0012, volatility = 0.015).
+4. `mean_reverting`: Ornstein-Uhlenbeck-like mean-reverting process on log-prices converging toward a target value of 100.0 (theta = 0.05, noise volatility = 0.012).
+5. `volatile`: Random walk with elevated return volatility representing high-variance regimes (mean return = 0.0002, volatility = 0.04).
+
+All scenarios use a deterministic random seed for complete reproducibility. These price paths are purely synthetic and are not intended to represent real market behavior or faked profitability.
+
+## Agent Trace Flow
+
+When a user submits a natural-language alpha prompt, the Mock AI Alpha Research Agent parses the query offline and generates a structured response alongside a detailed execution trace:
+1. Keyword Parsing: The agent classifies the prompt into a financial theme based on keywords (e.g., momentum, volume, volatility).
+2. Template Selection: The agent selects the corresponding formula template and default parameter values.
+3. Trace Generation: The agent populates an `AgentTrace` containing:
+   - `detected_theme`: The classified financial concept (e.g., volume_confirmation).
+   - `formula_template_selected`: The base formula template used.
+   - `validation_status`: The safety checks validation status (VALID/INVALID).
+   - `warnings`: A list of potential assumptions or safety boundaries.
+4. UI Display: The dashboard displays the trace panel in plain text, giving users immediate visibility into the mock agent's decision-making process.
+
 ## Limitations
 
 - File-based Storage: Experiment details are saved directly as flat files on the local filesystem. A database engine is not yet used to query or search over historical runs.
@@ -82,4 +117,5 @@ The Research Report Agent formats the experimental inputs, validations, metrics,
 - Database Layer: Introduce SQL-based storage for alpha ideas, backtest configurations, and test run outcomes.
 - Real LLM Integration: Swap the deterministic mock agent for actual local or API-based LLMs once connection infrastructure is configured.
 - Multi-Asset Support: Extend the expression engine and signal generator to handle panels of assets.
+
 
